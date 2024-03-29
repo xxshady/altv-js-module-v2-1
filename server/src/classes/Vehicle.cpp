@@ -1,5 +1,4 @@
 #include "Class.h"
-#include "cpp-sdk/ICore.h"
 
 static void NeonSetter(js::DynamicPropertySetterContext& ctx)
 {
@@ -19,6 +18,28 @@ static void NeonSetter(js::DynamicPropertySetterContext& ctx)
         front = val;
     else if(prop == "back")
         back = val;
+
+    vehicle->SetNeonActive(left, right, front, back);
+}
+
+static void SetNeonActive(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckThis()) return;
+    if (!ctx.CheckArgCount(1)) return;
+    if (!ctx.CheckArgType(0, js::Type::OBJECT)) return;
+
+    alt::IVehicle* vehicle = ctx.GetThisObject<alt::IVehicle>();
+
+    js::Object neonActive;
+    if (!ctx.GetArg(0, neonActive)) return;
+
+    bool activeLeft, activeRight, activeFront, activeBack;
+    vehicle->GetNeonActive(&activeLeft, &activeRight, &activeFront, &activeBack);
+
+    bool left = neonActive.Get<bool>("left", activeLeft);
+    bool right = neonActive.Get<bool>("right", activeRight);
+    bool front = neonActive.Get<bool>("front", activeFront);
+    bool back = neonActive.Get<bool>("back", activeBack);
 
     vehicle->SetNeonActive(left, right, front, back);
 }
@@ -96,6 +117,7 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.BindToType(alt::IBaseObject::Type::VEHICLE);
 
     tpl.DynamicProperty("neon", nullptr, &NeonSetter, nullptr, nullptr);
+    tpl.Method("setNeonActive", &SetNeonActive);
 
     tpl.Property("modKit", &ModKitGetter, &ModKitSetter);
     tpl.Property<&alt::IVehicle::GetPrimaryColor, &alt::IVehicle::SetPrimaryColor>("primaryColor");

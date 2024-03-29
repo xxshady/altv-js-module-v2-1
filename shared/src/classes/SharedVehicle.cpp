@@ -1,5 +1,4 @@
 #include "Class.h"
-#include "cpp-sdk/ICore.h"
 
 static void NeonGetter(js::DynamicPropertyGetterContext& ctx)
 {
@@ -21,6 +20,24 @@ static void NeonGetter(js::DynamicPropertyGetterContext& ctx)
     ctx.Return(val);
 }
 
+static void GetNeonActive(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckThis()) return;
+
+    alt::IVehicle* vehicle = ctx.GetThisObject<alt::IVehicle>();
+
+    bool left, right, front, back;
+    vehicle->GetNeonActive(&left, &right, &front, &back);
+
+    js::Object neonStates;
+    neonStates.Set("left", left);
+    neonStates.Set("right", right);
+    neonStates.Set("front", front);
+    neonStates.Set("back", back);
+
+    ctx.Return(neonStates);
+}
+
 static void NeonEnumerator(js::DynamicPropertyEnumeratorContext& ctx)
 {
     js::Array arr(4);
@@ -36,6 +53,7 @@ extern js::Class entityClass;
 extern js::Class sharedVehicleClass("SharedVehicle", &entityClass, nullptr, [](js::ClassTemplate& tpl)
 {
     tpl.DynamicProperty("neon", &NeonGetter, nullptr, nullptr, &NeonEnumerator);
+    tpl.Method("getNeonActive", &GetNeonActive);
 
     tpl.Property<&alt::IVehicle::GetDriver>("driver");
     tpl.Property<&alt::IVehicle::IsDestroyed>("isDestroyed");

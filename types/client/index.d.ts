@@ -1037,6 +1037,8 @@ declare module "@altv/client" {
         batteryLightState: boolean;
         suspensionHeight: number;
 
+        getNeonActive(): altShared.VehicleNeonState;
+
         getMod(category: number): number;
         getModsCount(category: number): number;
         isExtraOn(extraId: number): boolean;

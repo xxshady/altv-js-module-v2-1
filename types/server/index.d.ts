@@ -684,6 +684,9 @@ declare module "@altv/server" {
         readonly accelerationLevel: number;
         readonly brakeLevel: number;
 
+        setNeonActive(neons: Partial<altShared.VehicleNeonState>): void;
+        getNeonActive(): altShared.VehicleNeonState;
+
         getMod(category: number): number;
         getModsCount(category: number): number;
         isExtraOn(extraId: number): boolean;

@@ -379,10 +379,10 @@ declare module "@altv/shared" {
     }
 
     export interface VehicleNeonState {
-        readonly left: boolean;
-        readonly right: boolean;
-        readonly front: boolean;
-        readonly back: boolean;
+        left: boolean;
+        right: boolean;
+        front: boolean;
+        back: boolean;
     }
 
     export interface KeyStateInfo {
