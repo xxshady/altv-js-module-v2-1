@@ -3,7 +3,7 @@
 // import * as alt from "@altv/server";
 
 /** @type {typeof import("../../../../shared/js/utils.js")} */
-const { assert } = requireBinding("shared/utils.js");
+const { assert, isObject } = requireBinding("shared/utils.js");
 
 const { SharedBaseObject } = requireBinding("shared/compatibility/classes/sharedBaseObject.js");
 
@@ -27,6 +27,48 @@ class VirtualEntity extends alt.VirtualEntity {
             streamingDistance,
             data
         });
+    }
+
+    getSyncedMeta(key) {
+        return this.syncedMeta[key];
+    }
+
+    setSyncedMeta(key, value) {
+        if (isObject(key)) {
+            this.setMultipleSyncedMetaData(key);
+            return;
+        }
+
+        this.syncedMeta[key] = value;
+    }
+
+    deleteSyncedMeta(key) {
+        delete this.syncedMeta[key];
+    }
+
+    getSyncedMetaKeys() {
+        return Object.keys(this.syncedMeta);
+    }
+
+    getStreamSyncedMeta(key) {
+        return this.streamSyncedMeta[key];
+    }
+
+    setStreamSyncedMeta(key, value) {
+        if (isObject(key)) {
+            this.setMultipleStreamSyncedMetaData(key);
+            return;
+        }
+
+        this.streamSyncedMeta[key] = value;
+    }
+
+    deleteStreamSyncedMeta(key) {
+        delete this.streamSyncedMeta[key];
+    }
+
+    getStreamSyncedMetaKeys() {
+        return Object.keys(this.streamSyncedMeta);
     }
 }
 

@@ -29,6 +29,18 @@ class VirtualEntity extends alt.VirtualEntity {
         });
     }
 
+    hasSyncedMeta(key) {
+        return this.syncedMeta[key] !== undefined;
+    }
+
+    getSyncedMeta(key) {
+        return this.syncedMeta[key];
+    }
+
+    getSyncedMetaKeys() {
+        return Object.keys(this.syncedMeta);
+    }
+
     hasStreamSyncedMeta(key) {
         return this.streamSyncedMeta[key] !== undefined;
     }
