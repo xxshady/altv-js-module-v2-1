@@ -796,6 +796,9 @@ declare module "@altv/server" {
         syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
 
+        public setMultipleSyncedMetaData(data: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>): void;
+        public setMultipleStreamSyncedMetaData(data: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>): void;
+
         public onCreate?(opts: VirtualEntityCreateOptions): void;
         public onDestroy?(): void;
 
