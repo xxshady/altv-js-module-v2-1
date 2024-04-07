@@ -25,16 +25,16 @@ static void EncodeInto(js::FunctionContext& ctx)
 {
     if (!ctx.CheckArgCount(2)) return;
 
-    v8::Local<v8::String> value;
-    if (!ctx.GetArg(0, value)) return;
-    if (!ctx.Check(value->IsString(), "Argument 0 must be a string")) return;
+    v8::Local<v8::Value> strValue;
+    if (!ctx.GetArg(0, strValue)) return;
+    if (!ctx.Check(strValue->IsString(), "Argument 0 must be a string")) return;
 
-    v8::Local<v8::Uint8Array> arr;
-    if (!ctx.GetArg(1, arr)) return;
-    if (!ctx.Check(arr->IsUint8Array(), "Argument 1 must be a Uint8Array")) return;
+    v8::Local<v8::Value> arrValue;
+    if (!ctx.GetArg(1, arrValue)) return;
+    if (!ctx.Check(arrValue->IsUint8Array(), "Argument 1 must be a Uint8Array")) return;
 
-    v8::Local<v8::String> str = value.As<v8::String>();
-    v8::Local<v8::Uint8Array> uint8Array = arr.As<v8::Uint8Array>();
+    v8::Local<v8::String> str = strValue.As<v8::String>();
+    v8::Local<v8::Uint8Array> uint8Array = arrValue.As<v8::Uint8Array>();
 
     v8::Local<v8::ArrayBuffer> buffer = uint8Array->Buffer();
     char* data = (char*)((uintptr_t)buffer->GetBackingStore()->Data() + uint8Array->ByteOffset());
