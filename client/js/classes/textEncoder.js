@@ -1,0 +1,1 @@
+globalThis.TextEncoder = alt.TextEncoder;

@@ -509,7 +509,7 @@ static js::Module altModule("@altv/client", "@altv/shared",
     &audioClass, &audioFilterClass, &blipClass, &markerClass, &textLabelClass, &checkpointClass, &webViewClass, &fontClass,
     &localPedClass, &localVehicleClass, &rmlDocumentClass, &rmlElementClass, &localObjectClass, &webSocketClientClass,
     &mapZoomDataClass, &virtualEntityClass, &virtualEntityGroupClass, &weaponDataClass, &handlingClass, &handlingDataClass,
-    &httpClientClass, &audioOutputClass, &audioOutputAttachedClass, &audioOutputFrontendClass, &audioOutputWorldClass, &audioCategoryClass, &textEncoderClass/*, &textDecoderClass*/ },
+    &httpClientClass, &audioOutputClass, &audioOutputAttachedClass, &audioOutputFrontendClass, &audioOutputWorldClass, &audioCategoryClass, &textEncoderClass, &textDecoderClass },
 [](js::ModuleTemplate& module) {
     module.StaticProperty("isClient", true);
     module.StaticProperty("isServer", false);

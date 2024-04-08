@@ -1219,6 +1219,21 @@ declare module "@altv/client" {
         static getFactory<T extends WebSocketClient>(): T;
     }
 
+    export class TextEncoder {
+        public readonly encoding: "utf-8";
+
+        public encode(str: string): Uint8Array;
+        public encodeInto(str: string, arr: Uint8Array): { read: number; written: number };
+    }
+
+    export class TextDecoder {
+        public readonly encoding: "utf-8";
+
+        constructor(encoding?: "utf-8", options?: { fatal: boolean; ignoreBOM: boolean });
+
+        public decode(buffer: ArrayBuffer): string;
+    }
+
     export interface _WebViewTextureCreateOptions {
         drawable: number | string; // default: 0
         targetTexture: string;
