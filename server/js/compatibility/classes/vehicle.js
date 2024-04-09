@@ -36,8 +36,12 @@ class Vehicle extends alt.Vehicle {
         this.appearanceDataBase64 = data;
     }
 
+    /**
+     * @param {boolean} state
+     */
     set roofClosed(state) {
-        this.roofState = state;
+        // roofState is uint8 in sdk
+        this.roofState = +state;
     }
 
     set activeRadioStation(stationIndex) {
