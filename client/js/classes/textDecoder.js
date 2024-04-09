@@ -3,19 +3,27 @@ alt.TextDecoder.prototype.decode = function (input = new Uint8Array(0), options 
 
     // todo: don't ignore options
 
-    // Copilot definitely didn't write this for me
     let str = "";
-    for (let i = 0; i < input.length; i++) {
-        const byte = input[i];
+    let i = 0;
+    while (i < input.length) {
+        let byte = input[i];
+        let codePoint = 0;
+
         if (byte < 128) {
-            str += String.fromCharCode(byte);
-        } else if (byte > 191 && byte < 224) {
-            str += String.fromCharCode(((byte & 31) << 6) | (input[i + 1] & 63));
-            i++;
-        } else {
-            str += String.fromCharCode(((byte & 15) << 12) | ((input[i + 1] & 63) << 6) | (input[i + 2] & 63));
+            codePoint = byte;
+        } else if (byte >= 192 && byte < 224) {
+            codePoint = ((byte & 31) << 6) | (input[i + 1] & 63);
+            i += 1;
+        } else if (byte >= 224 && byte < 240) {
+            codePoint = ((byte & 15) << 12) | ((input[i + 1] & 63) << 6) | (input[i + 2] & 63);
             i += 2;
+        } else if (byte >= 240 && byte < 248) {
+            codePoint = ((byte & 7) << 18) | ((input[i + 1] & 63) << 12) | ((input[i + 2] & 63) << 6) | (input[i + 3] & 63);
+            i += 3;
         }
+
+        str += String.fromCodePoint(codePoint);
+        i++;
     }
 
     return str;
