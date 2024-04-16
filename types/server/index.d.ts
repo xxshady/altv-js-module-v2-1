@@ -802,6 +802,8 @@ declare module "@altv/server" {
         public onCreate?(opts: VirtualEntityCreateOptions): void;
         public onDestroy?(): void;
 
+        static readonly all: ReadonlyArray<VirtualEntity>;
+
         static getByID(id: number): VirtualEntity | null;
         static create(opts: VirtualEntityCreateOptions): VirtualEntity;
 
