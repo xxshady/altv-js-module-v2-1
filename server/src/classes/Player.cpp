@@ -374,6 +374,27 @@ static void GetClothes(js::FunctionContext& ctx)
     ctx.Return(obj);
 }
 
+static void SetClothes(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckThis()) return;
+    if(!ctx.CheckArgCount(3, 4)) return;
+    alt::IPlayer* player = ctx.GetThisObject<alt::IPlayer>();
+
+    uint8_t component;
+    if(!ctx.GetArg(0, component)) return;
+
+    uint8_t drawable;
+    if(!ctx.GetArg(1, drawable)) return;
+
+    uint8_t texture;
+    if(!ctx.GetArg(2, texture)) return;
+
+    if (ctx.GetArgCount() == 4 && !ctx.CheckArgType(3, js::Type::NUMBER)) return;
+    uint8_t palette = ctx.GetArg<uint8_t>(3, 2);
+
+    ctx.Return(player->SetClothes(component, drawable, texture, palette));
+}
+
 static void GetDlcClothes(js::FunctionContext& ctx)
 {
     if(!ctx.CheckThis()) return;
@@ -883,7 +904,7 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
     tpl.Method<&alt::IPlayer::SetWeather>("setWeather");
     tpl.Method("kick", Kick);
     tpl.Method("getClothes", &GetClothes);
-    tpl.Method<&alt::IPlayer::SetClothes>("setClothes");
+    tpl.Method("setClothes", &SetClothes);
     tpl.Method("getDlcClothes", &GetDlcClothes);
     tpl.Method<&alt::IPlayer::SetDlcClothes>("setDlcClothes");
     tpl.Method<&alt::IPlayer::ClearClothes>("clearClothes");

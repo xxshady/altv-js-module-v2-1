@@ -487,7 +487,7 @@ declare module "@altv/server" {
         kick(reason?: string): void;
 
         getClothes(componentId: number): altShared.Appearance.Clothing;
-        setClothes(componentId: number, drawable: number, texture: number, palette: number): boolean;
+        setClothes(componentId: number, drawable: number, texture: number, palette?: number): boolean;
         getDlcClothes(componentId: number): altShared.Appearance.DlcClothing;
         setDlcClothes(componentId: number, drawable: number, texture: number, palette: number, dlc: number): boolean;
         clearClothes(componentId: number): boolean;
