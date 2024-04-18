@@ -38,6 +38,6 @@ extern js::Class sharedVirtualEntityClass("SharedVirtualEntity", &worldObjectCla
 
     tpl.Property<&alt::IVirtualEntity::IsVisible, &alt::IVirtualEntity::SetVisible>("visible");
 
-    tpl.DynamicProperty("syncedMeta", SyncedMetaGetter, nullptr, nullptr, SyncedMetaEnumerator);
+    // tpl.DynamicProperty("syncedMeta", SyncedMetaGetter, nullptr, nullptr, SyncedMetaEnumerator);
     tpl.DynamicProperty("streamSyncedMeta", StreamSyncedMetaGetter, nullptr, nullptr, StreamSyncedMetaEnumerator);
 });

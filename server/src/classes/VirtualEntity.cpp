@@ -100,7 +100,7 @@ extern js::Class virtualEntityClass("VirtualEntity", &sharedVirtualEntityClass, 
 {
     tpl.BindToType(alt::IBaseObject::Type::VIRTUAL_ENTITY);
 
-    tpl.DynamicProperty("syncedMeta", nullptr, SyncedMetaSetter, SyncedMetaDeleter, nullptr);
+    // tpl.DynamicProperty("syncedMeta", nullptr, SyncedMetaSetter, SyncedMetaDeleter, nullptr);
     tpl.DynamicProperty("streamSyncedMeta", nullptr, StreamSyncedMetaSetter, StreamSyncedMetaDeleter, nullptr);
 
     tpl.Method("setMultipleSyncedMetaData", SetMultipleSyncedMetaData);

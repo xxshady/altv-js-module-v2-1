@@ -793,7 +793,7 @@ declare module "@altv/server" {
         visible: boolean;
 
         meta: VirtualEntityMeta & Record<string, unknown>;
-        syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
+        // syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
 
         public setMultipleSyncedMetaData(data: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>): void;

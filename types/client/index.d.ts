@@ -1133,7 +1133,7 @@ declare module "@altv/client" {
         visible: boolean;
 
         readonly meta: VirtualEntityMeta & Record<string, unknown>;
-        readonly syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
+        // readonly syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
         readonly streamSyncedMeta: Readonly<altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>>;
 
         static readonly all: ReadonlyArray<VirtualEntity>;
