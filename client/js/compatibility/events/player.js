@@ -24,3 +24,19 @@ registerEventHandler(alt.Enums.EventType.PLAYER_START_LEAVE_VEHICLE, "startLeavi
 registerEventHandler(alt.Enums.EventType.PLAYER_WEAPON_CHANGE, "playerWeaponChange", ({ oldWeapon, newWeapon }) => {
     return [oldWeapon, newWeapon];
 });
+
+registerEventHandler(alt.Enums.EventType.PLAYER_ENTER_VEHICLE, "enteredVehicle", ({ vehicle, seat }) => {
+    return [vehicle, seat];
+});
+
+registerEventHandler(alt.Enums.EventType.PLAYER_LEAVE_VEHICLE, "leftVehicle", ({ vehicle, seat }) => {
+    return [vehicle, seat];
+});
+
+registerEventHandler(alt.Enums.EventType.PLAYER_START_TALKING, "playerStartTalking", ({ player }) => {
+    return [player];
+});
+
+registerEventHandler(alt.Enums.EventType.PLAYER_STOP_TALKING, "playerStopTalking", ({ player }) => {
+    return [player];
+});
