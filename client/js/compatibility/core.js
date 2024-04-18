@@ -66,6 +66,18 @@ function getLocalMeta(key) {
     return alt.localMeta[key];
 }
 
+function worldToScreen(...args) {
+    const pos = args.length === 3 ? new alt.Vector3(...args) : args[0];
+
+    return alt.worldToScreen(pos);
+}
+
+function screenToWorld(...args) {
+    const pos = args.length === 2 ? new alt.Vector2(...args) : args[0];
+
+    return alt.worldToScreen(pos);
+}
+
 function getCamPos() {
     return alt.Cam.pos;
 }
@@ -167,8 +179,8 @@ cppBindings.registerCompatibilityExport("toggleRmlControls", alt.setRmlControlsA
 cppBindings.registerCompatibilityExport("rmlControlsEnabled", alt.areRmlControlsActive);
 cppBindings.registerCompatibilityExport("loadRmlFont", alt.loadRmlFontFace);
 
-cppBindings.registerCompatibilityExport("worldToScreen", alt.worldToScreen);
-cppBindings.registerCompatibilityExport("screenToWorld", alt.screenToWorld);
+cppBindings.registerCompatibilityExport("worldToScreen", worldToScreen);
+cppBindings.registerCompatibilityExport("screenToWorld", screenToWorld);
 
 cppBindings.registerCompatibilityExport("getCamPos", getCamPos);
 cppBindings.registerCompatibilityExport("getScreenResolution", alt.getScreenResolution);
