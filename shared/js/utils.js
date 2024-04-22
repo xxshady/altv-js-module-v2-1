@@ -10,16 +10,28 @@ export function waitForNextTick() {
     return wait(0);
 }
 
-export function waitFor(cb, timeout) {
+export function waitFor(cb, timeout = 2000) {
+    assertIsType(cb, "function", "Expected a function as first argument");
+    assertIsType(timeout, "number", "Expected a number or undefined as second argument");
+
     const checkUntil = Date.now() + timeout;
 
     return new Promise((resolve, reject) => {
         alt.Timers.everyTick(function () {
             if (Date.now() > checkUntil) {
                 this.destroy();
-                return reject(new Error("Timeout"));
+                return reject(new Error(`waitFor timed out (limit was ${timeout}ms)`));
             }
-            if (cb()) {
+            
+            let result;
+            try {
+                result = cb();
+            } catch (cause) {
+                this.destroy();
+                return reject(new Error(`Uncaught exception in waitFor callback`, { cause }));
+            }
+
+            if (result) {
                 this.destroy();
                 return resolve();
             }
