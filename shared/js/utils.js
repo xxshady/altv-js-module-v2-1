@@ -15,12 +15,14 @@ export function waitFor(cb, timeout = 2000) {
     assertIsType(timeout, "number", "Expected a number or undefined as second argument");
 
     const checkUntil = Date.now() + timeout;
+    const sourceLocation = cppBindings.getCurrentSourceLocation();
+    const source = `resource: ${cppBindings.resourceName} source: ${sourceLocation.fileName}:${sourceLocation.lineNumber}`;
 
     return new Promise((resolve, reject) => {
         alt.Timers.everyTick(function () {
             if (Date.now() > checkUntil) {
                 this.destroy();
-                return reject(new Error(`waitFor timed out (limit was ${timeout}ms)`));
+                return reject(new Error(`waitFor timed out (limit was ${timeout}ms, ${source})`));
             }
             
             let result;
@@ -28,7 +30,7 @@ export function waitFor(cb, timeout = 2000) {
                 result = cb();
             } catch (cause) {
                 this.destroy();
-                return reject(new Error(`Uncaught exception in waitFor callback`, { cause }));
+                return reject(new Error(`Uncaught exception in waitFor callback (${source})`, { cause }));
             }
 
             if (result) {
