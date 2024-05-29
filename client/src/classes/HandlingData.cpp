@@ -1391,6 +1391,16 @@ static void Get(js::FunctionContext& ctx)
     ctx.Return(cache.GetOrCreate(ctx.GetResource(), modelHash));
 }
 
+static void ReloadVehiclePhysics(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckArgCount(1)) return;
+
+    uint32_t modelHash;
+    if (!ctx.GetArgAsHash(0, modelHash)) return;
+
+    ctx.Return(alt::ICore::Instance().ReloadVehiclePhysics(modelHash));
+}
+
 // clang-format off
 extern js::Class handlingDataClass("HandlingData", [](js::ClassTemplate& tpl)
 {
@@ -1462,4 +1472,5 @@ extern js::Class handlingDataClass("HandlingData", [](js::ClassTemplate& tpl)
     tpl.Property("damageFlags", DamageFlagsGetter, DamageFlagsSetter);
 
     tpl.StaticFunction("get", Get);
+    tpl.StaticFunction("reloadVehiclePhysics", ReloadVehiclePhysics);
 }, true);
