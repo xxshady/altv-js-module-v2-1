@@ -16,9 +16,10 @@ const eventMap = new Map();
  */
 function on(eventName, callback) {
     const eventType = getEventTypeFromName(eventName) ?? alt.Enums.EventType.SERVER_SCRIPT_EVENT;
-    const custom = isCustomEvent(eventType);
+    const custom = isCustomEvent(eventName);
 
     // alt.log(`[compatibility] Registering event handler for ${eventName} (${eventType} - ${custom ? "custom" : "generic"})`);
+    // alt.log(`[compatibility] `, isCustomEvent(eventName), isCustomEvent(eventType));
 
     if (!custom) {
         cppBindings.toggleEvent(eventType, true);
@@ -53,7 +54,7 @@ function onRemote(eventName, callback) {
  */
 function once(eventName, callback) {
     const eventType = getEventTypeFromName(eventName) ?? alt.Enums.EventType.SERVER_SCRIPT_EVENT;
-    const custom = isCustomEvent(eventType);
+    const custom = isCustomEvent(eventName);
 
     // alt.log(`[compatibility] Registering event handler for ${eventName} (${eventType} - ${custom ? "custom" : "generic"})`);
 
@@ -90,7 +91,7 @@ function onceRemote(eventName, callback) {
  */
 function off(eventName, callback) {
     const eventType = getEventTypeFromName(eventName) ?? alt.Enums.EventType.SERVER_SCRIPT_EVENT;
-    const custom = isCustomEvent(eventType);
+    const custom = isCustomEvent(eventName);
 
     if (!custom) {
         cppBindings.toggleEvent(eventType, false);

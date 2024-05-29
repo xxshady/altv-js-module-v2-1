@@ -44,6 +44,22 @@ export function getEventArgumentConverter(eventType, custom = false) {
     return map.get(eventType)?.contextToArgsFunc;
 }
 
-export function isCustomEvent(eventType) {
-    return customEventMap.has(eventType);
+/**
+ * If the provided event is an Enum, it's looking for alt.Enums.EventType/CustomEventType. If it's a string, it's looking for the old event name.
+ * @param {alt.Enums.EventType | string} event
+ * @returns boolean
+ */
+export function isCustomEvent(event) {
+    switch (typeof event) {
+        case "string":
+            for (const { oldEventName } of customEventMap.values()) {
+                if (oldEventName === event) return true;
+            }
+
+            return false;
+            
+        case "number":
+        default:
+            return customEventMap.has(event);
+    }
 }
