@@ -645,8 +645,8 @@ declare module "@altv/shared" {
 
         export type JSType = "string" | "number" | "object" | "function" | "undefined" | "boolean" | "symbol" | "bigint";
 
-        export function assert(condition: unknown, message?: string): void;
-        export function assertIsObject(value: unknown, message?: string): void;
+        export function assert(condition: unknown, message?: string): asserts condition;
+        export function assertIsObject(value: unknown, message?: string): asserts value is object;
         export function assertIsType(value: unknown, type: JSType, message?: string): void;
         export function assertNotNaN(value: number, message?: string): void;
 
