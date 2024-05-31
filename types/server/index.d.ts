@@ -641,7 +641,7 @@ declare module "@altv/server" {
         manualEngineControl: boolean;
         damageDataBase64: string;
         scriptDataBase64: string;
-        gameStateDataBase64: string;
+        gameStateBase64: string;
         healthDataBase64: string;
         attached?: Vehicle;
         attachedTo?: Vehicle;
