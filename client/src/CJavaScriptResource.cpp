@@ -6,7 +6,14 @@ v8::Local<v8::Module> CJavaScriptResource::CompileAndRun(const std::string& path
 {
     js::TryCatch tryCatch(isolate);
 
-    v8::MaybeLocal<v8::Module> maybeMod = CompileModule(path, source);
+    const std::vector<uint8_t> buffer(source.begin(), source.end());
+
+    bool isBytecode = IModuleHandler::IsBytecodeBuffer(buffer);
+
+    v8::MaybeLocal<v8::Module> maybeMod = isBytecode
+        ? CompileBytecode(path, buffer)
+        : CompileModule(path, source);
+
     if(maybeMod.IsEmpty())
     {
         js::Logger::Error("[JS] Failed to compile file", path);

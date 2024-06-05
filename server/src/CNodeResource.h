@@ -30,4 +30,6 @@ public:
     void OnTick() override;
 
     void RunEventLoop() override;
+
+    bool MakeClient(alt::IResource::CreationInfo* info, std::vector<std::string>) override;
 };

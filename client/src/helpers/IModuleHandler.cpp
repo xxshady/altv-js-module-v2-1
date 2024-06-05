@@ -226,7 +226,7 @@ v8::MaybeLocal<v8::Module> IModuleHandler::CompileBytecode(const std::string& na
     memcpy(&sourceCodeSize, buffer.data() + sizeof(bytecodeMagic), sizeof(int));
     memcpy(bytecode, buffer.data() + sizeof(bytecodeMagic) + sizeof(int), bytecodeSize);
 
-    std::string sourceStr = "'" + std::string(' ', sourceCodeSize - 2) + "'";
+    std::string sourceStr = "'" + std::string(sourceCodeSize, ' ') + "'";
 
     v8::ScriptCompiler::CachedData* cachedData = new v8::ScriptCompiler::CachedData(bytecode, bytecodeSize, v8::ScriptCompiler::CachedData::BufferOwned);
     v8::ScriptOrigin origin(isolate, js::JSValue(name), 0, 0, false, GetNextScriptId(), v8::Local<v8::Value>(), false, false, true, v8::Local<v8::PrimitiveArray>());

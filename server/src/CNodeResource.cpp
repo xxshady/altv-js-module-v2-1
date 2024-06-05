@@ -127,3 +127,9 @@ void CNodeResource::RunEventLoop()
     CNodeRuntime::Instance().OnTick();
     IAltResource::RunEventLoop();
 }
+
+bool CNodeResource::MakeClient(alt::IResource::CreationInfo* info, std::vector<std::string>)
+{
+    if(resource->GetClientType() == "jsb") info->type = "jsv2";
+    return true;
+}
