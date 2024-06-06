@@ -507,7 +507,7 @@ declare module "@altv/client" {
         damageFlags: number;
 
         static get(modelHash: number | string): HandlingData | undefined;
-        static reloadVehiclePhysics(modelHash: number | string): boolean;
+        // static reloadVehiclePhysics(modelHash: number | string): boolean;
     }
 
     export type HttpResponse = { statusCode: number; headers: Readonly<Record<string, string>>; body: string };
