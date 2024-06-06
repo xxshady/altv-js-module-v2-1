@@ -3,7 +3,7 @@
 // import * as alt from "@altv/client";
 
 /** @type {typeof import("../../../../shared/js/utils.js")} */
-const { assertIsType } = requireBinding("shared/utils.js");
+const { assertIsType, assert } = requireBinding("shared/utils.js");
 
 requireBinding("client/factory.js");
 
