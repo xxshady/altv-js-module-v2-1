@@ -1391,7 +1391,6 @@ static void Get(js::FunctionContext& ctx)
     ctx.Return(cache.GetOrCreate(ctx.GetResource(), modelHash));
 }
 
-/*
 static void ReloadVehiclePhysics(js::FunctionContext& ctx)
 {
     if (!ctx.CheckArgCount(1)) return;
@@ -1401,7 +1400,6 @@ static void ReloadVehiclePhysics(js::FunctionContext& ctx)
 
     ctx.Return(alt::ICore::Instance().ReloadVehiclePhysics(modelHash));
 }
-*/
 
 // clang-format off
 extern js::Class handlingDataClass("HandlingData", [](js::ClassTemplate& tpl)
@@ -1474,5 +1472,5 @@ extern js::Class handlingDataClass("HandlingData", [](js::ClassTemplate& tpl)
     tpl.Property("damageFlags", DamageFlagsGetter, DamageFlagsSetter);
 
     tpl.StaticFunction("get", Get);
-    // tpl.StaticFunction("reloadVehiclePhysics", ReloadVehiclePhysics);
+    tpl.StaticFunction("reloadVehiclePhysics", ReloadVehiclePhysics);
 }, true);
