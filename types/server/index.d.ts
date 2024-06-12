@@ -1108,8 +1108,8 @@ declare module "@altv/server" {
         export function onceVehicleHornStateChange<T extends Player>(callback: GenericCancellablePlayerEventCallback<VehicleHornStateChangeEventParameters, T>): altShared.Events.EventHandler;
 
         // Voice related events
-        export function onVoiceConnectionCreate(callback: GenericEventCallback<VoiceConnectionEventParameters>): altShared.Events.EventHandler;
-        export function onceVoiceConnectionCreate(callback: GenericEventCallback<VoiceConnectionEventParameters>): altShared.Events.EventHandler;
+        export function onVoiceConnection(callback: GenericEventCallback<VoiceConnectionEventParameters>): altShared.Events.EventHandler;
+        export function onceVoiceConnection(callback: GenericEventCallback<VoiceConnectionEventParameters>): altShared.Events.EventHandler;
 
         // Object related events
         export function onClientObjectDelete<T extends Player>(callback: GenericCancellablePlayerEventCallback<{}, T>): altShared.Events.EventHandler;
