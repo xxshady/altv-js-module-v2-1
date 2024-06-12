@@ -371,8 +371,8 @@ class GenericEventHandler extends EventHandler {
     }
 }
 
-alt.Events.emitRaw = emitRaw();
-alt.Events.emitUnreliableRaw = emitRaw("emitUnreliable");
+alt.Events.emitRaw = emitRaw(alt.Events.emit);
+alt.Events.emitUnreliableRaw = emitRaw(alt.Events.emitUnreliable);
 
 alt.Events.on = Event.getScriptEventFunc(true);
 alt.Events.once = Event.getScriptEventFunc(true, true);
@@ -388,10 +388,10 @@ if (alt.isClient) {
 } else {
     alt.Events.onPlayer = Event.getScriptEventFunc(false);
     alt.Events.oncePlayer = Event.getScriptEventFunc(false, true);
-    alt.Events.emitPlayersRaw = emitRaw("emitPlayers");
-    alt.Events.emitPlayersUnreliableRaw = emitRaw("emitPlayersUnreliable");
-    alt.Events.emitAllPlayersRaw = emitRaw("emitAllPlayers");
-    alt.Events.emitAllPlayersUnreliableRaw = emitRaw("emitAllPlayersUnreliable");
+    alt.Events.emitPlayersRaw = emitRaw(alt.Events.emitPlayers);
+    alt.Events.emitPlayersUnreliableRaw = emitRaw(alt.Events.emitPlayersUnreliable);
+    alt.Events.emitAllPlayersRaw = emitRaw(alt.Events.emitAllPlayers);
+    alt.Events.emitAllPlayersUnreliableRaw = emitRaw(alt.Events.emitAllPlayersUnreliable);
 }
 alt.Events.onEvent = Event.subscribeGeneric;
 
