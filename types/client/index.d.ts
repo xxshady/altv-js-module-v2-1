@@ -1019,7 +1019,7 @@ declare module "@altv/client" {
         readonly streamSyncedMeta: Readonly<altShared.VehicleStreamSyncedMeta & Record<string, unknown>>;
 
         readonly speed: number;
-        readonly gear: number;
+        gear: number;
         readonly maxGear: number;
         readonly rpm: number;
         readonly speedVector: altShared.Vector3;
