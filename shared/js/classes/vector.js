@@ -91,6 +91,10 @@ export class Vector3 {
         return dx * dx + dy * dy + dz * dz;
     }
 
+    toArray() {
+        return [this.x, this.y, this.z];
+    }
+
     toFixed(precision = 4) {
         return new Vector3(parseFloat(this.x.toFixed(precision)), parseFloat(this.y.toFixed(precision)), parseFloat(this.z.toFixed(precision)));
     }
@@ -228,6 +232,10 @@ export class Vector2 {
         const dx = this.x - x;
         const dy = this.y - y;
         return dx * dx + dy * dy;
+    }
+
+    toArray() {
+        return [this.x, this.y];
     }
 
     toFixed(precision = 4) {
