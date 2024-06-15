@@ -2118,6 +2118,7 @@ declare module "@altv/shared" {
         }
 
         // When changing, update shared/js/enums/watermarkPosition.js aswell
+        /** @deprecated This method will be removed in the next major release. (v17)  */
         export enum WatermarkPosition {
             BOTTOM_RIGHT = 0,
             TOP_RIGHT = 1,

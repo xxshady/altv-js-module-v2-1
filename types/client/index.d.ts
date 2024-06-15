@@ -44,6 +44,7 @@ declare module "@altv/client" {
     export function setDlcClothes(scriptId: number, component: number, drawable: number, texture: number, palette?: number, dlc?: number): void;
     export function setDlcProps(scriptId: number, component: number, drawable: number, texture: number, dlc?: number): void;
     export function clearProps(scriptId: number, component: number): void;
+    /** @deprecated This method will be removed in the next major release. (v17)  */
     export function setWatermarkPosition(position: altShared.Enums.WatermarkPosition): void;
     export function copyToClipboard(str: string): void;
     export function toggleRmlDebugger(state: boolean): void;
