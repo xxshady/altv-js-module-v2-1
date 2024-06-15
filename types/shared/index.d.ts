@@ -254,6 +254,8 @@ declare module "@altv/shared" {
         lerp(ratio: number, xy: [number, number]): Vector2;
         lerp(ratio: number, xy: IVector2): Vector2;
 
+        toArray(): [number, number];
+
         static zero: Vector2;
         static one: Vector2;
         static up: Vector2;
@@ -348,6 +350,8 @@ declare module "@altv/shared" {
         lerp(ratio: number, other: Vector3): Vector3;
         lerp(ratio: number, xyz: [number, number, number]): Vector3;
         lerp(ratio: number, xyz: IVector3): Vector3;
+
+        toArray(): [number, number, number];
 
         static zero: Vector3;
         static one: Vector3;
