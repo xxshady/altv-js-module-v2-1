@@ -33,17 +33,22 @@ function on(eventName, callback) {
 
 /**
  *
- * @param {string} eventName
+ * @param {string|Function} eventNameOrCallback
  * @param {Function} callback
  */
-function onRemote(eventName, callback) {
+function onRemote(eventNameOrCallback, callback) {
+    const isStringEvent = typeof eventNameOrCallback === 'string';
+    
+    const eventName = isStringEvent ? eventNameOrCallback : null;
+    const actualCallback = isStringEvent ? callback : eventNameOrCallback;
+
     const eventType = alt.isServer ? alt.Enums.EventType.CLIENT_SCRIPT_EVENT : alt.Enums.EventType.SERVER_SCRIPT_EVENT;
 
     // alt.log(`[compatibility] Registering event handler for ${eventName} (${eventType})`);
 
     const handlers = eventMap.get(eventType) ?? [];
-    handlers.push({ callback, eventName, once: false, isRemote: true });
-
+    handlers.push({ callback: actualCallback, eventName, once: false, isRemote: true });
+    
     eventMap.set(eventType, handlers);
 }
 
@@ -148,15 +153,15 @@ alt.Events.onEvent(async (ctx) => {
     if (handlers.length > 0 && (ctx.eventType == alt.Enums.EventType.CLIENT_SCRIPT_EVENT || ctx.eventType == alt.Enums.EventType.SERVER_SCRIPT_EVENT)) {
         const isRemote = alt.isServer ? ctx.eventType == alt.Enums.EventType.CLIENT_SCRIPT_EVENT : ctx.eventType == alt.Enums.EventType.SERVER_SCRIPT_EVENT;
 
-        handlers = handlers.filter((handler) => handler.eventName == ctx.eventName && !!handler.isRemote == isRemote);
+        handlers = handlers.filter((handler) => (handler.eventName == ctx.eventName || handler.eventName == null) && !!handler.isRemote == isRemote);
     }
 
     if (!handlers.length) return;
 
     const handlersToRemove = [];
 
-    for (const { callback, once } of handlers) {
-        let ret = callback(...args);
+    for (const { eventName, callback, once } of handlers) {
+        let ret = eventName == null ? callback(ctx.eventName, ...args) : callback(...args);
 
         if (ret instanceof Promise) ret = await ret;
 
