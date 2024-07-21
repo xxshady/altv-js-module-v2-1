@@ -798,6 +798,7 @@ declare module "@altv/client" {
         getWeaponTintIndex(weaponHash: number | string): number | undefined;
         hasWeaponComponent(weaponHash: number | string, componentHash: number | string): boolean;
 
+        readonly meta: PlayerMeta & Record<string, unknown>;
         readonly syncedMeta: Readonly<altShared.PlayerSyncedMeta & Record<string, unknown>>;
         readonly streamSyncedMeta: Readonly<altShared.PlayerStreamSyncedMeta & Record<string, unknown>>;
 
