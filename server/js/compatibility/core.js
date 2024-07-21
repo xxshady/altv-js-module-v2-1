@@ -28,12 +28,16 @@ cppBindings.registerCompatibilityExport("getWeaponModelInfoByHash", alt.WeaponMo
 // cppBindings.registerCompatibilityExport("getAmmoHashForWeaponHash", alt.we);
 
 cppBindings.registerCompatibilityExport("getServerConfig", () => alt.serverConfig);
-
+cppBindings.registerCompatibilityExport("hashServerPassword", alt.hashServerPassword);
+cppBindings.registerCompatibilityExport("stopServer", alt.stopServer);
 cppBindings.registerCompatibilityExport("toggleWorldProfiler", alt.toggleWorldProfiler);
-
 cppBindings.registerCompatibilityExport("getEntitiesInDimension", alt.getEntitiesInDimension);
 cppBindings.registerCompatibilityExport("getEntitiesInRange", alt.getEntitiesInRange);
 cppBindings.registerCompatibilityExport("getClosestEntities", alt.getClosestEntities);
+cppBindings.registerCompatibilityExport("setVoiceExternalPublic", alt.setVoiceExternalPublic);
+cppBindings.registerCompatibilityExport("setVoiceExternal", alt.setVoiceExternalPublic);
+
+cppBindings.registerCompatibilityExport("hasBenefit", alt.hasBenefit);
 
 // Streaming
 cppBindings.registerCompatibilityExport("getMaxStreamingPeds", () => alt.Streaming.maxStreamingPeds);
