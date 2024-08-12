@@ -69,8 +69,14 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.Method<&alt::IVehicle::SetWheelRimRadius>("setWheelRimRadius");
     tpl.Method<&alt::IVehicle::GetWheelTyreWidth>("getWheelTyreWidth");
     tpl.Method<&alt::IVehicle::SetWheelTyreWidth>("setWheelTyreWidth");
+    tpl.Method<&alt::IVehicle::GetWheelDynamicFlag>("getWheelDynamicFlag");
+    tpl.Method<&alt::IVehicle::SetWheelDynamicFlag>("setWheelDynamicFlag");
+    tpl.Method<&alt::IVehicle::GetWheelConfigFlag>("getWheelConfigFlag");
+    tpl.Method<&alt::IVehicle::SetWheelConfigFlag>("setWheelConfigFlag");
     tpl.Method<&alt::IVehicle::GetWheelSurfaceMaterial>("getWheelSurfaceMaterial");
     tpl.Method<&alt::IVehicle::ResetDashboardLights>("resetDashboardLights");
+
+    tpl.Method<&alt::IVehicle::SetupTransmission>("setupTransmission");
 
     tpl.GetByID<alt::IBaseObject::Type::VEHICLE>();
     tpl.GetByRemoteID<alt::IBaseObject::Type::VEHICLE>();

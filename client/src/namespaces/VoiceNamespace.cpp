@@ -21,7 +21,8 @@ static void ActivityInputEnabledSetter(js::PropertyContext& ctx)
 {
     bool enabled;
     if(!ctx.GetValue(enabled)) return;
-    alt::ICore::Instance().ToggleVoiceActivation(enabled);
+    bool success = alt::ICore::Instance().ToggleVoiceActivation(enabled);
+    ctx.Check(success, "Missing voice permissions");
 }
 
 static void ActivationLevelGetter(js::PropertyContext& ctx)
@@ -33,7 +34,8 @@ static void ActivationLevelSetter(js::PropertyContext& ctx)
 {
     float level;
     if(!ctx.GetValue(level)) return;
-    alt::ICore::Instance().SetVoiceActivationLevel(level);
+    bool success = alt::ICore::Instance().SetVoiceActivationLevel(level);
+    ctx.Check(success, "Missing voice permissions");
 }
 
 static void ActivationKeyGetter(js::PropertyContext& ctx)
@@ -55,7 +57,8 @@ static void NoiseSuppressionEnabledSetter(js::PropertyContext& ctx)
 {
     bool enabled;
     if(!ctx.GetValue(enabled)) return;
-    alt::ICore::Instance().ToggleNoiseSuppression(enabled);
+    bool success = alt::ICore::Instance().ToggleNoiseSuppression(enabled);
+    ctx.Check(success, "Missing voice permissions");
 }
 
 static void InputDeviceGetter(js::PropertyContext& ctx)

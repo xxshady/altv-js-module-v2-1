@@ -263,16 +263,16 @@ static void DriveBiasFrontSetter(js::PropertyContext& ctx)
     handling->SetDriveBiasFront(value);
 }
 
-static void AccelerationGetter(js::PropertyContext& ctx)
+static void DriveBiasRearGetter(js::PropertyContext& ctx)
 {
     if(!ctx.CheckExtraInternalFieldJSValue()) return;
     uint32_t modelHash = ctx.GetExtraInternalFieldJSValue<uint32_t>();
     auto handling = alt::ICore::Instance().GetHandlingData(modelHash);
 
-    ctx.Return(handling->GetAcceleration());
+    ctx.Return(handling->GetDriveBiasRear());
 }
 
-static void AccelerationSetter(js::PropertyContext& ctx)
+static void DriveBiasRearSetter(js::PropertyContext& ctx)
 {
     if(!ctx.CheckExtraInternalFieldJSValue()) return;
     uint32_t modelHash = ctx.GetExtraInternalFieldJSValue<uint32_t>();
@@ -281,7 +281,32 @@ static void AccelerationSetter(js::PropertyContext& ctx)
     float value;
     if(!ctx.GetValue(value)) return;
 
-    handling->SetAcceleration(value);
+    handling->SetDriveBiasRear(value);
+}
+
+static void AccelerationGetter(js::PropertyContext& ctx)
+{
+    ctx.Deprecate("HandlingData.acceleration", "HandlingData.driveBiasRear");
+
+    if(!ctx.CheckExtraInternalFieldJSValue()) return;
+    uint32_t modelHash = ctx.GetExtraInternalFieldJSValue<uint32_t>();
+    auto handling = alt::ICore::Instance().GetHandlingData(modelHash);
+
+    ctx.Return(handling->GetDriveBiasRear());
+}
+
+static void AccelerationSetter(js::PropertyContext& ctx)
+{
+    ctx.Deprecate("HandlingData.acceleration", "HandlingData.driveBiasRear");
+
+    if(!ctx.CheckExtraInternalFieldJSValue()) return;
+    uint32_t modelHash = ctx.GetExtraInternalFieldJSValue<uint32_t>();
+    auto handling = alt::ICore::Instance().GetHandlingData(modelHash);
+
+    float value;
+    if(!ctx.GetValue(value)) return;
+
+    handling->SetDriveBiasRear(value);
 }
 
 static void InitialDriveGearsGetter(js::PropertyContext& ctx)
@@ -1417,6 +1442,7 @@ extern js::Class handlingDataClass("HandlingData", [](js::ClassTemplate& tpl)
     tpl.Property("percentSubmerged", PercentSubmergedGetter, PercentSubmergedSetter);
     tpl.Property("percentSubmergedRatio", PercentSubmergedRatioGetter, PercentSubmergedRatioSetter);
     tpl.Property("driveBiasFront", DriveBiasFrontGetter, DriveBiasFrontSetter);
+    tpl.Property("driveBiasRear", DriveBiasRearGetter, DriveBiasRearSetter);
     tpl.Property("acceleration", AccelerationGetter, AccelerationSetter);
     tpl.Property("initialDriveGears", InitialDriveGearsGetter, InitialDriveGearsSetter);
     tpl.Property("driveInertia", DriveInertiaGetter, DriveInertiaSetter);

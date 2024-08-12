@@ -67,6 +67,7 @@ alt.Events.onWorldObjectStreamOut(({ object }) => {
 });
 
 function addEntityToStreamedIn(entity) {
+    if (entityStreamedInSet.has(entity)) return;
     entityStreamedInSetDirty = true;
     entityStreamedInSet.add(entity);
     const all = entityStreamedInMap.get(entity.type);
@@ -75,6 +76,7 @@ function addEntityToStreamedIn(entity) {
     if (storageClass) storageClass.__streamedInDirty = true;
 }
 function removeEntityFromStreamedIn(entity) {
+    if (!entityStreamedInSet.has(entity)) return;
     entityStreamedInSetDirty = true;
     entityStreamedInSet.delete(entity);
     const all = entityStreamedInMap.get(entity.type);

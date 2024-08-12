@@ -329,7 +329,7 @@ bool js::ValueDeserializer::Entity(v8::Local<v8::Value>& value)
 #endif
 
     if(!entity) return false;
-    value = resource->GetScriptObject(entity)->Get();
+    value = resource->GetOrCreateScriptObject(resource->GetContext(), entity)->Get();
     return true;
 }
 

@@ -24,6 +24,24 @@ registerEventHandler(
     true
 );
 
+registerEventHandler(
+    alt.Enums.CustomEventType.ENTITY_ENTER_CHECKPOINT,
+    "entityEnterColshape",
+    ({ entity, colShape }) => {
+        return [colShape, entity];
+    },
+    true
+);
+
+registerEventHandler(
+    alt.Enums.CustomEventType.ENTITY_LEAVE_CHECKPOINT,
+    "entityLeaveColshape",
+    ({ entity, colShape }) => {
+        return [colShape, entity];
+    },
+    true
+);
+
 registerEventHandler(alt.Enums.EventType.CLIENT_SCRIPT_EVENT, "__CLIENT_SCRIPT_EVENT__", ({ player, args }) => {
     return alt.isServer ? [player, ...args] : args;
 });

@@ -77,7 +77,7 @@ static void CreateEntity(js::FunctionContext& ctx)
             return;
         }
 
-        scriptObject = resource->GetScriptObject(object);
+        scriptObject = resource->GetOrCreateScriptObject(resource->GetContext(), object);
         if(!scriptObject)
         {
             if(!tryCatch.HasCaught()) ctx.Throw("Failed to create entity of type " + std::string(magic_enum::enum_name(type)));

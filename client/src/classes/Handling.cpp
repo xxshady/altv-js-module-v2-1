@@ -248,6 +248,26 @@ static void DriveBiasFrontSetter(js::PropertyContext& ctx)
     vehicle->GetHandling()->SetDriveBiasFront(value);
 }
 
+static void DriveBiasRearGetter(js::PropertyContext& ctx)
+{
+    if(!ctx.CheckExtraInternalFieldValue()) return;
+    alt::IVehicle* vehicle = ctx.GetExtraInternalFieldValue<alt::IVehicle>();
+
+    ctx.Return(vehicle->GetHandling()->GetDriveBiasRear());
+}
+
+static void DriveBiasRearSetter(js::PropertyContext& ctx)
+{
+    if(!ctx.CheckExtraInternalFieldValue()) return;
+    alt::IVehicle* vehicle = ctx.GetExtraInternalFieldValue<alt::IVehicle>();
+
+    float value;
+    if(!ctx.GetValue(value)) return;
+
+    vehicle->ReplaceHandling();
+    vehicle->GetHandling()->SetDriveBiasRear(value);
+}
+
 static void AccelerationGetter(js::PropertyContext& ctx)
 {
     if(!ctx.CheckExtraInternalFieldValue()) return;
@@ -1341,6 +1361,7 @@ extern js::Class handlingClass("Handling", [](js::ClassTemplate& tpl)
     tpl.Property("percentSubmerged", PercentSubmergedGetter, PercentSubmergedSetter);
     tpl.Property("percentSubmergedRatio", PercentSubmergedRatioGetter, PercentSubmergedRatioSetter);
     tpl.Property("driveBiasFront", DriveBiasFrontGetter, DriveBiasFrontSetter);
+    tpl.Property("driveBiasRear", DriveBiasRearGetter, DriveBiasRearSetter);
     tpl.Property("acceleration", AccelerationGetter, AccelerationSetter);
     tpl.Property("initialDriveGears", InitialDriveGearsGetter, InitialDriveGearsSetter);
     tpl.Property("driveInertia", DriveInertiaGetter, DriveInertiaSetter);

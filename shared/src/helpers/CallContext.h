@@ -190,6 +190,11 @@ namespace js
         {
             Logger::Warn("This API is deprecated: " + message);
         }
+
+        void Deprecate(const std::string& oldProperty, const std::string& newProperty)
+        {
+            Logger::Warn(oldProperty + " is deprecated and will be removed in future versions. Consider using " + newProperty + " instead");
+        }
     };
 
     class FunctionContext : public CallContext<v8::FunctionCallbackInfo<v8::Value>>
