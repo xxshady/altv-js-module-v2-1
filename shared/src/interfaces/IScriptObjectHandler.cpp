@@ -4,6 +4,8 @@
 
 js::ScriptObject* js::IScriptObjectHandler::GetOrCreateScriptObject(v8::Local<v8::Context> context, alt::IBaseObject* object)
 {
+    Logger::Warn("GetOrCreateScriptObject", static_cast<int32_t>(object->GetType()));
+    
     js::ScriptObject* existingObject = GetScriptObject(object);
     if(existingObject) return existingObject;
 
@@ -18,11 +20,14 @@ js::ScriptObject* js::IScriptObjectHandler::GetOrCreateScriptObject(v8::Local<v8
 
     if(HasCustomFactory(object->GetType()))
     {
+        Logger::Warn("HasCustomFactory true");
         v8::Local<v8::Function> factory = GetCustomFactory(object->GetType());
         scriptObject = ScriptObject::Create(context, object, factory, class_);
     }
-    else
+    else {
+        Logger::Warn("HasCustomFactory false");
         scriptObject = ScriptObject::Create(context, object, class_);
+    }
 
     if(!scriptObject)
     {

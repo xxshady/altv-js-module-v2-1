@@ -14,8 +14,13 @@ requireBinding("server/factory.js");
 
 class Vehicle extends alt.Vehicle {
     constructor(...args) {
+        alt.log("called new Vehicle");
+
         // NOTE (xLuxy): This prevents the infinite loop caused by alt.*.create
-        if (!args.length) return super();
+        if (!args.length) {
+            alt.log("called new without args");
+            return super();
+        }
 
         assert(args.length >= 3 && args.length <= 8, "Minimum 3, maximum 8 arguments expected");
         assertIsOneOfType(args[0], ["string", "number"], "string or number expected");
