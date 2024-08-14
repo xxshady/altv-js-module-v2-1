@@ -230,8 +230,8 @@ std::optional<std::pair<uint8_t*, size_t>> js::ValueSerializer::Serialize(v8::Lo
     writer.resource = resource;
     writer.serializer = &serializer;
 
-    writer.serializer->WriteHeader();
     writer.Magic();
+    writer.serializer->WriteHeader();
     bool result = writer.Value(value);
     if(!result) return std::nullopt;
 
@@ -409,8 +409,8 @@ std::optional<v8::Local<v8::Value>> js::ValueDeserializer::Deserialize(uint8_t* 
     reader.resource = resource;
     reader.deserializer = &deserializer;
 
-    if(!reader.deserializer->ReadHeader(resource->GetContext()).FromMaybe(false)) return std::nullopt;
     if(!reader.Magic()) return std::nullopt;
+    if(!reader.deserializer->ReadHeader(resource->GetContext()).FromMaybe(false)) return std::nullopt;
     v8::Local<v8::Value> value;
     bool result = reader.Value(value);
     if(!result) return std::nullopt;
