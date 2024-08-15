@@ -136,7 +136,6 @@ alt::MValue js::JSToMValue(v8::Local<v8::Value> val, bool allowFunction)
         else if(val->IsTypedArray())
         {
             v8::Local<v8::TypedArray> typedArray = val.As<v8::TypedArray>();
-            if(!typedArray->HasBuffer()) return core.CreateMValueNone();
             v8::Local<v8::ArrayBuffer> v8Buffer = typedArray->Buffer();
             return core.CreateMValueByteArray((uint8_t*)((uintptr_t)v8Buffer->GetBackingStore()->Data() + typedArray->ByteOffset()), typedArray->ByteLength());
         }
