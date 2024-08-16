@@ -99,7 +99,7 @@ static void GetAllEntities(js::FunctionContext& ctx)
 
     for (auto& entity : entities)
     {
-        ctx.GetResource()->GetOrCreateScriptObject(ctx.GetContext(), entity);
+        ctx.GetResource()->GetScriptObject(entity);
     }
 
     ctx.Return(entities);
@@ -111,7 +111,7 @@ static void GetAllVirtualEntities(js::FunctionContext& ctx)
 
     for (auto& entity : virtualEntities)
     {
-        ctx.GetResource()->GetOrCreateScriptObject(ctx.GetContext(), entity);
+        ctx.GetResource()->GetScriptObject(entity);
     }
 
     ctx.Return(virtualEntities);
