@@ -48,6 +48,32 @@ function getEntityFactory(type) {
     };
 }
 
+function setupInitialData(entity, type, ctx) {
+    if (!ctx || !entity instanceof alt.BaseObject || !ctx.initialData) return;
+
+    const { meta, syncedMeta, streamSyncedMeta } = ctx.initialData;
+
+    if (meta) {
+        for (const [key, value] of Object.entries(meta)) {
+            entity.meta[key] = value;
+        }
+    }
+
+    if (entity instanceof alt.Entity && alt.isServer) {
+        if (syncedMeta) {
+            for (const [key, value] of Object.entries(syncedMeta)) {
+                entity.syncedMeta[key] = value;
+            }
+        }
+
+        if (streamSyncedMeta) {
+            for (const [key, value] of Object.entries(streamSyncedMeta)) {
+                entity.streamSyncedMeta[key] = value;
+            }
+        }
+    }
+}
+
 export function registerFactory(altClass, type) {
     altClass.setFactory = setEntityFactory(altClass, type);
     altClass.getFactory = getEntityFactory(type);
@@ -58,6 +84,10 @@ export function getFactoryCreateFunction(type, ctxCb) {
         if (ctxCb) ctx = ctxCb(ctx);
         assertIsObject(ctx, "Invalid args");
 
-        return cppBindings.createEntity(type, ctx);
+        const entity = cppBindings.createEntity(type, ctx);
+
+        if (entity) setupInitialData(entity, type, ctx);
+
+        return entity;
     };
 }

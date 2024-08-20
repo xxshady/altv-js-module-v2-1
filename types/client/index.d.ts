@@ -68,17 +68,21 @@ declare module "@altv/client" {
         volume: number;
         radio?: boolean; // default: false
         clearCache?: boolean; // default: true
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
-    
+
     type AudioEventParametersMap = {
-        "inited": [],
-        "streamStarted": [],
-        "streamEnded": [],
-        "streamPaused": [],
-        "streamReset": [],
-        "streamSeek": [time: number]
-        "volumeChange": [vol: number]
-        "error": [code: number, message: string]
+        inited: [];
+        streamStarted: [];
+        streamEnded: [];
+        streamPaused: [];
+        streamReset: [];
+        streamSeek: [time: number];
+        volumeChange: [vol: number];
+        error: [code: number, message: string];
     };
 
     export abstract class Audio extends BaseObject {
@@ -139,6 +143,10 @@ declare module "@altv/client" {
 
     export interface AudioFilterCreateOptions {
         hash: number | string;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export abstract class AudioFilter {
@@ -187,6 +195,10 @@ declare module "@altv/client" {
     export interface AudioOutputAttachedCreateOptions {
         entity: WorldObject;
         categoryHash?: number; // default: 'radio' hashed
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export abstract class AudioOutputAttached extends AudioOutput {
@@ -204,8 +216,11 @@ declare module "@altv/client" {
     }
 
     export interface AudioOutputFrontendCreateOptions {
-        //
         categoryHash?: number; // default: 'radio' hashed
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export abstract class AudioOutputFrontend extends AudioOutput {
@@ -250,9 +265,22 @@ declare module "@altv/client" {
         readonly syncedMeta: Readonly<altShared.BaseObjectSyncedMeta & Record<string, unknown>>;
     }
 
-    export type PointBlipCreateOptions = { pos: altShared.IVector3; entity?: never } | { entity: Entity; pos?: never };
+    export type PointBlipCreateOptions =
+        | { pos: altShared.IVector3; entity?: never }
+        | ({ entity: Entity; pos?: never } & {
+              initialData?: Partial<{
+                  meta: BlipMeta & Record<string, unknown>;
+              }>;
+          });
 
-    type BlipCreateOptions = ({ blipType: altShared.Enums.BlipType.AREA } & altShared.AreaBlipCreateOptions) | ({ blipType: altShared.Enums.BlipType.RADIUS } & altShared.RadiusBlipCreateOptions) | ({ blipType: altShared.Enums.BlipType.DESTINATION } & PointBlipCreateOptions);
+    type BlipCreateOptions =
+        | ({ blipType: altShared.Enums.BlipType.AREA } & altShared.AreaBlipCreateOptions)
+        | ({ blipType: altShared.Enums.BlipType.RADIUS } & altShared.RadiusBlipCreateOptions)
+        | (({ blipType: altShared.Enums.BlipType.DESTINATION } & PointBlipCreateOptions) & {
+              initialData?: Partial<{
+                  meta: BlipMeta & Record<string, unknown>;
+              }>;
+          });
 
     export interface MarkerCreateOptions {
         type: altShared.Enums.MarkerType;
@@ -260,6 +288,10 @@ declare module "@altv/client" {
         color?: altShared.IRGBA; // default: {r: 255, g: 255, b: 255, a: 100}
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
+
+        initialData?: Partial<{
+            meta: MarkerMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class Blip extends WorldObject {
@@ -385,6 +417,10 @@ declare module "@altv/client" {
         iconColor: altShared.RGBA;
         nextPos: altShared.IVector3;
         streamingDistance: number;
+
+        initialData?: Partial<{
+            meta: CheckpointMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class Checkpoint extends ColShape {
@@ -569,6 +605,10 @@ declare module "@altv/client" {
         dynamic?: boolean; // default: false
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
+
+        initialData?: Partial<{
+            meta: ObjectMeta & Record<string, unknown>;
+        }>;
     }
 
     // @ts-expect-error - Suppress "Class static side 'typeof LocalObject' incorrectly extends base class static side 'typeof Object'.""
@@ -627,6 +667,10 @@ declare module "@altv/client" {
         scale?: number; // default: 1
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
+
+        inititalData?: Partial<{
+            meta: ObjectMeta & Record<string, unknown>;
+        }>;
     }
 
     export namespace WeaponObject {
@@ -661,6 +705,10 @@ declare module "@altv/client" {
         heading?: number; // default: 0
         useStreaming?: boolean; // default: true
         streamingDistance?: number; // default: 0
+
+        initialData?: Partial<{
+            meta: PedMeta & Record<string, unknown>;
+        }>;
     }
 
     // @ts-expect-error  Suppress "Class static side 'typeof LocalPed' incorrectly extends base class static side 'typeof Ped'."
@@ -710,6 +758,10 @@ declare module "@altv/client" {
         rot: altShared.Vector3;
         useStreaming?: boolean; // default: true
         streamingDistance?: number; // default: 300
+
+        initialData?: Partial<{
+            meta: VehicleMeta & Record<string, unknown>;
+        }>;
     }
 
     // @ts-expect-error Supress "Class static side 'typeof LocalVehicle' incorrectly extends base class static side 'typeof Vehicle'.""
@@ -815,6 +867,10 @@ declare module "@altv/client" {
 
     export interface RmlDocumentCreateOptions {
         url: string;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export abstract class RmlDocument extends RmlElement {
@@ -1117,6 +1173,10 @@ declare module "@altv/client" {
         fontScale?: number; // default: 1
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export interface VirtualEntityCreateOptions {
@@ -1124,6 +1184,10 @@ declare module "@altv/client" {
         pos: altShared.IVector3;
         streamingDistance: number;
         data?: Record<string, unknown>;
+
+        initialData?: Partial<{
+            meta: VirtualEntityMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class VirtualEntityGroup extends BaseObject {
@@ -1191,6 +1255,10 @@ declare module "@altv/client" {
 
     export interface WebSocketClientCreateOptions {
         url: string;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export abstract class WebSocketClient extends BaseObject {
@@ -1251,12 +1319,20 @@ declare module "@altv/client" {
     export interface _WebViewTextureCreateOptions {
         drawable: number | string; // default: 0
         targetTexture: string;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export interface _WebViewCreateOptionsDrawable {
         url: string;
         drawable: number | string;
         targetTexture: string;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export interface _WebViewCreateOptionsOverlay {

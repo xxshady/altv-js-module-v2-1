@@ -36,6 +36,11 @@ declare module "@altv/server" {
         targets?: Array<Entity>;
 
         blipType: altShared.Enums.BlipType;
+
+        initialData?: Partial<{
+            meta: BlipMeta & Record<string, unknown>;
+            syncedMeta: altShared.BlipSyncedMeta & Record<string, unknown>;
+        }>;
     }
 
     export type PointBlipCreateOptions = { pos: altShared.IVector3; entity?: never } | { entity: Entity; pos?: never };
@@ -234,6 +239,11 @@ declare module "@altv/server" {
 
         type: altShared.Enums.MarkerType;
         color?: altShared.IRGBA; // default: { r: 255, g: 255, b: 255, a: 255 }
+
+        initialData?: Partial<{
+            meta: MarkerMeta & Record<string, unknown>;
+            syncedMeta: altShared.MarkerSyncedMeta & Record<string, unknown>;
+        }>;
     }
 
     export interface CheckpointCreateOptions {
@@ -243,6 +253,12 @@ declare module "@altv/server" {
         height: number;
         color: altShared.RGBA;
         streamingDistance: number;
+
+        initialData?: Partial<{
+            meta: CheckpointMeta & Record<string, unknown>;
+            syncedMeta: altShared.CheckpointSyncedMeta & Record<string, unknown>;
+            streamSyncedMeta: altShared.CheckpointStreamSyncedMeta & Record<string, unknown>;
+        }>;
     }
 
     // @ts-expect-error - Suppresses "Class static side 'typeof Checkpoint' incorrectly extends base class static side 'typeof ColShape'.""
@@ -327,6 +343,12 @@ declare module "@altv/server" {
         textureVariation?: number; // default: 0
         lodDistance?: number; // default: 100
         streamingDistance?: number; // default: 0
+
+        initialData?: Partial<{
+            meta: ObjectMeta & Record<string, unknown>;
+            syncedMeta: altShared.ObjectSyncedMeta & Record<string, unknown>;
+            streamSyncedMeta: altShared.ObjectStreamSyncedMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class Object extends Entity {
@@ -358,6 +380,12 @@ declare module "@altv/server" {
         pos: altShared.IVector3;
         heading?: number; // default: 0
         streamingDistance?: number; // default: 0
+
+        initialData?: Partial<{
+            meta: PedMeta & Record<string, unknown>;
+            syncedMeta: altShared.PedSyncedMeta & Record<string, unknown>;
+            streamSyncedMeta: altShared.PedStreamSyncedMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class Ped extends Entity {
@@ -576,6 +604,12 @@ declare module "@altv/server" {
         pos: altShared.IVector3;
         rot?: altShared.IVector3; // default: { x: 0, y: 0, z: 0 }
         streamingDistance?: number; // default: 0
+
+        initialData?: Partial<{
+            meta: VehicleMeta & Record<string, unknown>;
+            syncedMeta: altShared.VehicleSyncedMeta & Record<string, unknown>;
+            streamSyncedMeta: altShared.VehicleStreamSyncedMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class Vehicle extends Entity {
@@ -765,7 +799,14 @@ declare module "@altv/server" {
         group: VirtualEntityGroup;
         pos: altShared.IVector3;
         streamingDistance: number;
+
         data?: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
+
+        initialData?: Partial<{
+            meta: VirtualEntityMeta & Record<string, unknown>;
+            // syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
+            streamSyncedMeta: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class VirtualEntityGroup extends BaseObject {
@@ -814,6 +855,10 @@ declare module "@altv/server" {
     export interface VoiceChannelCreateOptions {
         spatial: boolean;
         maxDistance?: number;
+
+        initialData?: Partial<{
+            meta: VoiceChannelMeta & Record<string, unknown>;
+        }>;
     }
 
     export abstract class VoiceChannel extends BaseObject {
@@ -823,14 +868,14 @@ declare module "@altv/server" {
         readonly players: ReadonlyArray<Player>;
         readonly playerCount: number;
 
-        meta: VoiceChannelMeta & Record<string, unknown>; 
+        meta: VoiceChannelMeta & Record<string, unknown>;
         /**
             Priority of voice channel. If a player is in two channels and both can be heard by another player, only one should play the voice.
             Value is of type integer, can be negative.
          */
         priority: number;
         /**
-         * Hash of the filter name (should also be created on clientside). 
+         * Hash of the filter name (should also be created on clientside).
          * See docs: [Audio filters](https://docs.altv.mp/articles/audio_filters.html), [Voice](https://docs.altv.mp/articles/voice.html).
          */
         filter: number;

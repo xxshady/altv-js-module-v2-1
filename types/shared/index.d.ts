@@ -2,6 +2,8 @@
  * @module @altv/shared
  */
 
+import { ColShapeMeta } from "@altv/server";
+
 declare module "@altv/shared" {
     export const defaultDimension: number;
     export const globalDimension: number;
@@ -70,22 +72,38 @@ declare module "@altv/shared" {
     export interface ColShapeSphereCreateOptions {
         pos: IVector3;
         radius: number;
+
+        initialData?: Partial<{
+            meta: ColShapeMeta & Record<string, unknown>;
+        }>;
     }
 
     export interface ColShapeCylinderCreateOptions {
         pos: IVector3;
         radius: number;
         height: number;
+
+        initialData?: Partial<{
+            meta: ColShapeMeta & Record<string, unknown>;
+        }>;
     }
 
     export interface ColShapeCircleCreateOptions {
         pos: IVector2;
         radius: number;
+
+        initialData?: Partial<{
+            meta: ColShapeMeta & Record<string, unknown>;
+        }>;
     }
 
     export interface ColShapeCuboidCreateOptions {
         pos1: IVector2;
         pos2: IVector3;
+
+        initialData?: Partial<{
+            meta: ColShapeMeta & Record<string, unknown>;
+        }>;
     }
 
     export interface ColShapeRectangleCreateOptions {
@@ -93,12 +111,20 @@ declare module "@altv/shared" {
         y1: number;
         x2: number;
         y2: number;
+
+        initialData?: Partial<{
+            meta: ColShapeMeta & Record<string, unknown>;
+        }>;
     }
 
     export interface ColShapePolygonCreateOptions {
         minZ: number;
         maxZ: number;
         points: IVector2[];
+
+        initialData?: Partial<{
+            meta: ColShapeMeta & Record<string, unknown>;
+        }>;
     }
 
     type ColShapeCreateOptions = {
@@ -110,7 +136,11 @@ declare module "@altv/shared" {
         | ({ colShapeType: Enums.ColShapeType.CUBOID } & ColShapeCuboidCreateOptions)
         | ({ colShapeType: Enums.ColShapeType.RECT } & ColShapeRectangleCreateOptions)
         | ({ colShapeType: Enums.ColShapeType.POLYGON } & ColShapePolygonCreateOptions)
-    );
+    ) & {
+            initialData?: {
+                meta: ColShapeMeta & Record<string, unknown>;
+            };
+        };
 
     export abstract class Resource {
         readonly type: string;
@@ -134,6 +164,10 @@ declare module "@altv/shared" {
 
     export interface VirtualEntityGroupCreateOptions {
         maxEntitiesInStream: number;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export interface IRGBA {
@@ -446,11 +480,19 @@ declare module "@altv/shared" {
     export interface AreaBlipCreateOptions {
         pos: IVector3;
         scale: IVector2;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     export interface RadiusBlipCreateOptions {
         pos: IVector3;
         radius: number;
+
+        initialData?: Partial<{
+            meta: Record<string, unknown>;
+        }>;
     }
 
     /**
