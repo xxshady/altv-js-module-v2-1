@@ -395,12 +395,13 @@ declare module "@altv/client" {
         isEntityIdIn(id: number): boolean;
         isPointIn(pos: altShared.Vector3): boolean;
 
-        public onCreate?(opts: altShared.ColShapeCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
         static readonly all: ReadonlyArray<ColShape>;
 
-        static create(opts: altShared.ColShapeCreateOptions): ColShape;
+        // commented because it breaks something
+        // static create(opts: altShared.ColShapeCreateOptions<ColShapeMeta>): ColShape;
         static getByID(id: number): ColShape | null;
         static getByRemoteID(id: number): ColShape | null;
 
@@ -1446,6 +1447,16 @@ declare module "@altv/client" {
      */
     export interface VirtualEntityMeta extends BaseObjectMeta {}
 
+    /**
+     * Extend it by interface merging for use in ColShape#meta.
+     */
+    export interface ColShapeMeta extends BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in Checkpoint#meta.
+     */
+    export interface CheckpointMeta extends ColShapeMeta {}
+
     export abstract class WorldObject extends BaseObject {
         dimension: number;
         pos: altShared.Vector3;
@@ -1469,10 +1480,10 @@ declare module "@altv/client" {
         readonly radius: number;
 
         // @ts-expect-error
-        public onCreate?(opts: altShared.ColShapeSphereCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeSphereCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeSphereCreateOptions): ColShapeSphere;
+        static create(opts: altShared.ColShapeSphereCreateOptions<ColShapeMeta>): ColShapeSphere;
     }
 
     export abstract class ColShapeCylinder extends ColShape {
@@ -1483,7 +1494,7 @@ declare module "@altv/client" {
         public onCreate?(opts: altShared.ColShapeCylinderCreateOptions): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCylinderCreateOptions): ColShapeCylinder;
+        static create(opts: altShared.ColShapeCylinderCreateOptions<ColShapeMeta>): ColShapeCylinder;
     }
 
     export abstract class ColShapeCircle extends ColShape {
@@ -1493,7 +1504,7 @@ declare module "@altv/client" {
         public onCreate?(opts: altShared.ColShapeCircleCreateOptions): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCircleCreateOptions): ColShapeCircle;
+        static create(opts: altShared.ColShapeCircleCreateOptions<ColShapeMeta>): ColShapeCircle;
     }
 
     export abstract class ColShapeCuboid extends ColShape {
@@ -1504,7 +1515,7 @@ declare module "@altv/client" {
         public onCreate?(opts: altShared.ColShapeCuboidCreateOptions): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCuboidCreateOptions): ColShapeCuboid;
+        static create(opts: altShared.ColShapeCuboidCreateOptions<ColShapeMeta>): ColShapeCuboid;
     }
 
     export abstract class ColShapeRectangle extends ColShape {
@@ -1515,7 +1526,7 @@ declare module "@altv/client" {
         public onCreate?(opts: altShared.ColShapeRectangleCreateOptions): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeRectangleCreateOptions): ColShapeRectangle;
+        static create(opts: altShared.ColShapeRectangleCreateOptions<ColShapeMeta>): ColShapeRectangle;
     }
 
     export abstract class ColShapePolygon extends ColShape {
@@ -1528,7 +1539,7 @@ declare module "@altv/client" {
         public onCreate?(opts: altShared.ColShapePolygonCreateOptions): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapePolygonCreateOptions): ColShapePolygon;
+        static create(opts: altShared.ColShapePolygonCreateOptions<ColShapeMeta>): ColShapePolygon;
     }
 
     export namespace Data {

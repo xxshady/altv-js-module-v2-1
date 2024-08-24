@@ -2,8 +2,6 @@
  * @module @altv/shared
  */
 
-import { ColShapeMeta } from "@altv/server";
-
 declare module "@altv/shared" {
     export const defaultDimension: number;
     export const globalDimension: number;
@@ -69,76 +67,76 @@ declare module "@altv/shared" {
         destroy(): void;
     }
 
-    export interface ColShapeSphereCreateOptions {
+    export interface ColShapeSphereCreateOptions<Meta> {
         pos: IVector3;
         radius: number;
 
         initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeCylinderCreateOptions {
+    export interface ColShapeCylinderCreateOptions<Meta> {
         pos: IVector3;
         radius: number;
         height: number;
 
         initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeCircleCreateOptions {
+    export interface ColShapeCircleCreateOptions<Meta> {
         pos: IVector2;
         radius: number;
 
         initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeCuboidCreateOptions {
+    export interface ColShapeCuboidCreateOptions<Meta> {
         pos1: IVector2;
         pos2: IVector3;
 
         initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeRectangleCreateOptions {
+    export interface ColShapeRectangleCreateOptions<Meta> {
         x1: number;
         y1: number;
         x2: number;
         y2: number;
 
         initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapePolygonCreateOptions {
+    export interface ColShapePolygonCreateOptions<Meta> {
         minZ: number;
         maxZ: number;
         points: IVector2[];
 
         initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    type ColShapeCreateOptions = {
+    type ColShapeCreateOptions<Meta> = {
         colShapeType: Enums.ColShapeType;
     } & (
-        | ({ colShapeType: Enums.ColShapeType.SPHERE } & ColShapeSphereCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.CYLINDER } & ColShapeCylinderCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.CIRCLE } & ColShapeCircleCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.CUBOID } & ColShapeCuboidCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.RECT } & ColShapeRectangleCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.POLYGON } & ColShapePolygonCreateOptions)
+        | ({ colShapeType: Enums.ColShapeType.SPHERE } & ColShapeSphereCreateOptions<Meta>)
+        | ({ colShapeType: Enums.ColShapeType.CYLINDER } & ColShapeCylinderCreateOptions<Meta>)
+        | ({ colShapeType: Enums.ColShapeType.CIRCLE } & ColShapeCircleCreateOptions<Meta>)
+        | ({ colShapeType: Enums.ColShapeType.CUBOID } & ColShapeCuboidCreateOptions<Meta>)
+        | ({ colShapeType: Enums.ColShapeType.RECT } & ColShapeRectangleCreateOptions<Meta>)
+        | ({ colShapeType: Enums.ColShapeType.POLYGON } & ColShapePolygonCreateOptions<Meta>)
     ) & {
             initialData?: {
-                meta: ColShapeMeta & Record<string, unknown>;
+                meta: Meta & Record<string, unknown>;
             };
         };
 
