@@ -68,22 +68,8 @@ function setupInitialMeta(baseObject, type, ctx) {
             baseObject.setMultipleSyncedMetaData(syncedMeta);
         }
 
-        if (baseObject instanceof alt.Entity) {
-            if (streamSyncedMeta) {
-                baseObject.setMultipleStreamSyncedMetaData(streamSyncedMeta);
-            }
-        }
-
-        if (baseObject instanceof alt.Checkpoint) {
-            if (streamSyncedMeta) {
-                baseObject.setMultipleStreamSyncedMetaData(streamSyncedMeta);
-            }
-        }
-
-        if (baseObject instanceof alt.VirtualEntity) {
-            if (streamSyncedMeta) {
-                baseObject.setMultipleStreamSyncedMetaData(streamSyncedMeta);
-            }
+        if (streamSyncedMeta && (baseObject instanceof alt.Entity || baseObject instanceof alt.Checkpoint || baseObject instanceof alt.VirtualEntity)) {
+            baseObject.setMultipleStreamSyncedMetaData(streamSyncedMeta);
         }
     }
 }
