@@ -630,7 +630,6 @@ declare module "@altv/server" {
         readonly isDaylightOn: boolean;
         readonly isNightlightOn: boolean;
         readonly isFlamethrowerActive: boolean;
-        readonly gameStateBase64: string;
         readonly wheelsCount: number;
         readonly repairsCount: number;
         readonly hasArmoredWindows: boolean;
