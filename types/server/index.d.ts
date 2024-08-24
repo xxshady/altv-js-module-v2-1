@@ -25,7 +25,7 @@ declare module "@altv/server" {
     export function hasBenefit(benefit: altShared.Enums.Benefit): boolean;
 
     export class BaseObject extends altShared.BaseObject {
-        meta: BaseObjectMeta & Record<string, unknown>;
+        meta: altShared.BaseObjectMeta & Record<string, unknown>;
         syncedMeta: altShared.BaseObjectSyncedMeta & Record<string, unknown>;
 
         static getByID(type: altShared.Enums.BaseObjectType, id: number): BaseObject | null;
@@ -38,7 +38,7 @@ declare module "@altv/server" {
         blipType: altShared.Enums.BlipType;
 
         initialData?: Partial<{
-            meta: BlipMeta & Record<string, unknown>;
+            meta: altShared.BlipMeta & Record<string, unknown>;
             syncedMeta: altShared.BlipSyncedMeta & Record<string, unknown>;
         }>;
     }
@@ -101,7 +101,7 @@ declare module "@altv/server" {
         addTarget(target: Player): void;
         removeTarget(target: Player): void;
 
-        meta: BlipMeta & Record<string, unknown>;
+        meta: altShared.BlipMeta & Record<string, unknown>;
         syncedMeta: altShared.BlipSyncedMeta & Record<string, unknown>;
 
         public onCreate?(opts: BlipCreateOptions): void;
@@ -131,7 +131,7 @@ declare module "@altv/server" {
         readonly target?: Player;
         readonly streamingDistance: number;
 
-        meta: MarkerMeta & Record<string, unknown>;
+        meta: altShared.MarkerMeta & Record<string, unknown>;
         syncedMeta: altShared.MarkerSyncedMeta & Record<string, unknown>;
 
         color: altShared.RGBA;
@@ -224,7 +224,7 @@ declare module "@altv/server" {
         isEntityIdIn(id: number): boolean;
         isPointIn(point: altShared.Vector3): boolean;
 
-        meta: ColShapeMeta & Record<string, unknown>;
+        meta: altShared.ColShapeMeta & Record<string, unknown>;
         syncedMeta: altShared.ColShapeSyncedMeta & Record<string, unknown>;
 
         static readonly all: ReadonlyArray<ColShape>;
@@ -241,7 +241,7 @@ declare module "@altv/server" {
         color?: altShared.IRGBA; // default: { r: 255, g: 255, b: 255, a: 255 }
 
         initialData?: Partial<{
-            meta: MarkerMeta & Record<string, unknown>;
+            meta: altShared.MarkerMeta & Record<string, unknown>;
             syncedMeta: altShared.MarkerSyncedMeta & Record<string, unknown>;
         }>;
     }
@@ -255,7 +255,7 @@ declare module "@altv/server" {
         streamingDistance: number;
 
         initialData?: Partial<{
-            meta: CheckpointMeta & Record<string, unknown>;
+            meta: altShared.CheckpointMeta & Record<string, unknown>;
             syncedMeta: altShared.CheckpointSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.CheckpointStreamSyncedMeta & Record<string, unknown>;
         }>;
@@ -278,7 +278,7 @@ declare module "@altv/server" {
         isEntityIdIn(id: number): boolean;
         isPointIn(point: altShared.Vector3): boolean;
 
-        meta: CheckpointMeta & Record<string, unknown>;
+        meta: altShared.CheckpointMeta & Record<string, unknown>;
         syncedMeta: altShared.CheckpointSyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.CheckpointStreamSyncedMeta & Record<string, unknown>;
 
@@ -307,7 +307,7 @@ declare module "@altv/server" {
         streamingDistance: number;
         readonly timestamp: number;
 
-        meta: EntityMeta & Record<string, unknown>;
+        meta: altShared.EntityMeta & Record<string, unknown>;
         syncedMeta: altShared.EntitySyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.EntityStreamSyncedMeta & Record<string, unknown>;
 
@@ -345,7 +345,7 @@ declare module "@altv/server" {
         streamingDistance?: number; // default: 0
 
         initialData?: Partial<{
-            meta: ObjectMeta & Record<string, unknown>;
+            meta: altShared.ObjectMeta & Record<string, unknown>;
             syncedMeta: altShared.ObjectSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.ObjectStreamSyncedMeta & Record<string, unknown>;
         }>;
@@ -359,7 +359,7 @@ declare module "@altv/server" {
         activatePhysics(): void;
         placeOnGroundProperly(): void;
 
-        meta: ObjectMeta & Record<string, unknown>;
+        meta: altShared.ObjectMeta & Record<string, unknown>;
         syncedMeta: altShared.ObjectSyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.ObjectStreamSyncedMeta & Record<string, unknown>;
 
@@ -382,7 +382,7 @@ declare module "@altv/server" {
         streamingDistance?: number; // default: 0
 
         initialData?: Partial<{
-            meta: PedMeta & Record<string, unknown>;
+            meta: altShared.PedMeta & Record<string, unknown>;
             syncedMeta: altShared.PedSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.PedStreamSyncedMeta & Record<string, unknown>;
         }>;
@@ -394,7 +394,7 @@ declare module "@altv/server" {
         armour: number;
         currentWeapon: number;
 
-        meta: PedMeta & Record<string, unknown>;
+        meta: altShared.PedMeta & Record<string, unknown>;
         syncedMeta: altShared.PedSyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.PedStreamSyncedMeta & Record<string, unknown>;
 
@@ -572,8 +572,8 @@ declare module "@altv/server" {
         sendRPC<E extends keyof altShared.RPC.CustomServerToPlayerRpcEvent>(rpcName: E, ...args: Parameters<altShared.RPC.CustomServerToPlayerRpcEvent[E]>): Promise<ReturnType<altShared.RPC.CustomServerToPlayerRpcEvent[E]>>;
         sendRPC<E extends string>(rpcName: Exclude<E, keyof altShared.RPC.CustomServerToPlayerRpcEvent>, ...args: unknown[]): Promise<any>;
 
-        meta: PlayerMeta & Record<string, unknown>;
-        localMeta: PlayerLocalMeta & Record<string, unknown>;
+        meta: altShared.PlayerMeta & Record<string, unknown>;
+        localMeta: altShared.PlayerLocalMeta & Record<string, unknown>;
         syncedMeta: altShared.PlayerSyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.PlayerStreamSyncedMeta & Record<string, unknown>;
 
@@ -606,7 +606,7 @@ declare module "@altv/server" {
         streamingDistance?: number; // default: 0
 
         initialData?: Partial<{
-            meta: VehicleMeta & Record<string, unknown>;
+            meta: altShared.VehicleMeta & Record<string, unknown>;
             syncedMeta: altShared.VehicleSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.VehicleStreamSyncedMeta & Record<string, unknown>;
         }>;
@@ -769,7 +769,7 @@ declare module "@altv/server" {
         setWeaponCapacity(index: number, state: number): void;
         setBadge(textureDictionary: string | number, texture: string | number, pos: VehicleBadgePosition, pos2?: VehicleBadgePosition, pos3?: VehicleBadgePosition, pos4?: VehicleBadgePosition): void;
 
-        meta: VehicleMeta & Record<string, unknown>;
+        meta: altShared.VehicleMeta & Record<string, unknown>;
         syncedMeta: altShared.VehicleSyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.VehicleStreamSyncedMeta & Record<string, unknown>;
 
@@ -802,7 +802,7 @@ declare module "@altv/server" {
         data?: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
 
         initialData?: Partial<{
-            meta: VirtualEntityMeta & Record<string, unknown>;
+            meta: altShared.VirtualEntityMeta & Record<string, unknown>;
             // syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
         }>;
@@ -832,7 +832,7 @@ declare module "@altv/server" {
 
         visible: boolean;
 
-        meta: VirtualEntityMeta & Record<string, unknown>;
+        meta: altShared.VirtualEntityMeta & Record<string, unknown>;
         // syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
         streamSyncedMeta: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
 
@@ -856,7 +856,7 @@ declare module "@altv/server" {
         maxDistance?: number;
 
         initialData?: Partial<{
-            meta: VoiceChannelMeta & Record<string, unknown>;
+            meta: altShared.VoiceChannelMeta & Record<string, unknown>;
         }>;
     }
 
@@ -867,7 +867,7 @@ declare module "@altv/server" {
         readonly players: ReadonlyArray<Player>;
         readonly playerCount: number;
 
-        meta: VoiceChannelMeta & Record<string, unknown>;
+        meta: altShared.VoiceChannelMeta & Record<string, unknown>;
         /**
             Priority of voice channel. If a player is in two channels and both can be heard by another player, only one should play the voice.
             Value is of type integer, can be negative.
@@ -1641,71 +1641,6 @@ declare module "@altv/server" {
             function removeCustomEventMax(event: string, max: number): void;
         }
     }
-
-    /**
-     * Extend it by interface merging for use in BaseObject#meta.
-     */
-    export interface BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Blip#meta.
-     */
-    export interface BlipMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Marker#meta.
-     */
-    export interface MarkerMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in ColShape#meta.
-     */
-    export interface ColShapeMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Checkpoint#meta.
-     */
-    export interface CheckpointMeta extends ColShapeMeta {}
-
-    /**
-     * Extend it by interface merging for use in VoiceChannel#meta.
-     */
-    export interface VoiceChannelMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Entity#meta.
-     */
-    export interface EntityMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Player#meta.
-     */
-    export interface PlayerMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in Player#meta.
-     */
-    export interface PlayerLocalMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in Vehicle#meta.
-     */
-    export interface VehicleMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in Ped#meta.
-     */
-    export interface PedMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in Object#meta.
-     */
-    export interface ObjectMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in VirtualEntity#meta.
-     */
-    export interface VirtualEntityMeta extends BaseObjectMeta {}
 
     interface StreamedInPlayerEntities {
         entity: Entity;

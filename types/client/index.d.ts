@@ -13,7 +13,7 @@ declare module "@altv/client" {
     export const clientConfig: Readonly<Record<string, unknown>>;
     export const clientPath: string;
 
-    export const localMeta: Readonly<GlobalLocalMeta & Record<string, unknown>>;
+    export const localMeta: Readonly<altShared.PlayerLocalMeta & Record<string, unknown>>;
 
     export function isMenuOpen(): boolean;
     export function isConsoleOpen(): boolean;
@@ -261,7 +261,7 @@ declare module "@altv/client" {
         static getByID(type: altShared.Enums.BaseObjectType, id: number): BaseObject | null;
         static getByRemoteID(type: altShared.Enums.BaseObjectType, id: number): BaseObject | null;
 
-        readonly meta: BaseObjectMeta & Record<string, unknown>;
+        readonly meta: altShared.BaseObjectMeta & Record<string, unknown>;
         readonly syncedMeta: Readonly<altShared.BaseObjectSyncedMeta & Record<string, unknown>>;
     }
 
@@ -269,7 +269,7 @@ declare module "@altv/client" {
         | { pos: altShared.IVector3; entity?: never }
         | ({ entity: Entity; pos?: never } & {
               initialData?: Partial<{
-                  meta: BlipMeta & Record<string, unknown>;
+                  meta: altShared.BlipMeta & Record<string, unknown>;
               }>;
           });
 
@@ -278,7 +278,7 @@ declare module "@altv/client" {
         | ({ blipType: altShared.Enums.BlipType.RADIUS } & altShared.RadiusBlipCreateOptions)
         | (({ blipType: altShared.Enums.BlipType.DESTINATION } & PointBlipCreateOptions) & {
               initialData?: Partial<{
-                  meta: BlipMeta & Record<string, unknown>;
+                  meta: altShared.BlipMeta & Record<string, unknown>;
               }>;
           });
 
@@ -290,7 +290,7 @@ declare module "@altv/client" {
         streamingDistance?: number; // default: 0
 
         initialData?: Partial<{
-            meta: MarkerMeta & Record<string, unknown>;
+            meta: altShared.MarkerMeta & Record<string, unknown>;
         }>;
     }
 
@@ -301,7 +301,7 @@ declare module "@altv/client" {
         readonly isAttached: boolean;
         readonly attachedTo?: Entity;
 
-        readonly meta: BlipMeta & Record<string, unknown>;
+        readonly meta: altShared.BlipMeta & Record<string, unknown>;
         readonly syncedMeta: Readonly<altShared.BlipSyncedMeta & Record<string, unknown>>;
 
         blipType: altShared.Enums.BlipType;
@@ -362,7 +362,7 @@ declare module "@altv/client" {
         readonly isGlobal: boolean;
         readonly streamingDistance: number;
 
-        readonly meta: MarkerMeta & Record<string, unknown>;
+        readonly meta: altShared.MarkerMeta & Record<string, unknown>;
 
         color: altShared.RGBA;
         visible: boolean;
@@ -419,7 +419,7 @@ declare module "@altv/client" {
         streamingDistance: number;
 
         initialData?: Partial<{
-            meta: CheckpointMeta & Record<string, unknown>;
+            meta: altShared.CheckpointMeta & Record<string, unknown>;
         }>;
     }
 
@@ -607,7 +607,7 @@ declare module "@altv/client" {
         streamingDistance?: number; // default: 0
 
         initialData?: Partial<{
-            meta: ObjectMeta & Record<string, unknown>;
+            meta: altShared.ObjectMeta & Record<string, unknown>;
         }>;
     }
 
@@ -669,7 +669,7 @@ declare module "@altv/client" {
         streamingDistance?: number; // default: 0
 
         inititalData?: Partial<{
-            meta: ObjectMeta & Record<string, unknown>;
+            meta: altShared.ObjectMeta & Record<string, unknown>;
         }>;
     }
 
@@ -683,7 +683,7 @@ declare module "@altv/client" {
         readonly armour: number;
         readonly currentWeapon: number;
 
-        readonly meta: PedMeta & Record<string, unknown>;
+        readonly meta: altShared.PedMeta & Record<string, unknown>;
         readonly syncedMeta: Readonly<altShared.PedSyncedMeta & Record<string, unknown>>;
         readonly streamSyncedMeta: Readonly<altShared.PedStreamSyncedMeta & Record<string, unknown>>;
 
@@ -707,7 +707,7 @@ declare module "@altv/client" {
         streamingDistance?: number; // default: 0
 
         initialData?: Partial<{
-            meta: PedMeta & Record<string, unknown>;
+            meta: altShared.PedMeta & Record<string, unknown>;
         }>;
     }
 
@@ -760,7 +760,7 @@ declare module "@altv/client" {
         streamingDistance?: number; // default: 300
 
         initialData?: Partial<{
-            meta: VehicleMeta & Record<string, unknown>;
+            meta: altShared.VehicleMeta & Record<string, unknown>;
         }>;
     }
 
@@ -850,7 +850,7 @@ declare module "@altv/client" {
         getWeaponTintIndex(weaponHash: number | string): number | undefined;
         hasWeaponComponent(weaponHash: number | string, componentHash: number | string): boolean;
 
-        readonly meta: PlayerMeta & Record<string, unknown>;
+        readonly meta: altShared.PlayerMeta & Record<string, unknown>;
         readonly syncedMeta: Readonly<altShared.PlayerSyncedMeta & Record<string, unknown>>;
         readonly streamSyncedMeta: Readonly<altShared.PlayerStreamSyncedMeta & Record<string, unknown>>;
 
@@ -1186,7 +1186,7 @@ declare module "@altv/client" {
         data?: Record<string, unknown>;
 
         initialData?: Partial<{
-            meta: VirtualEntityMeta & Record<string, unknown>;
+            meta: altShared.VirtualEntityMeta & Record<string, unknown>;
         }>;
     }
 
@@ -1210,8 +1210,7 @@ declare module "@altv/client" {
 
         visible: boolean;
 
-        readonly meta: VirtualEntityMeta & Record<string, unknown>;
-        // readonly syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
+        readonly meta: altShared.VirtualEntityMeta & Record<string, unknown>;
         readonly streamSyncedMeta: Readonly<altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>>;
 
         static readonly all: ReadonlyArray<VirtualEntity>;
@@ -1395,56 +1394,6 @@ declare module "@altv/client" {
         static setFactory(factory: typeof WebView): void;
         static getFactory<T extends WebView>(): T;
     }
-
-    /**
-     * Extend it by interface merging for use in localMeta.
-     */
-    export interface GlobalLocalMeta {}
-
-    /**
-     * Extend it by interface merging for use in BaseObject#meta.
-     */
-    export interface BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Blip#meta.
-     */
-    export interface BlipMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Marker#meta.
-     */
-    export interface MarkerMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Entity#meta.
-     */
-    export interface EntityMeta extends BaseObjectMeta {}
-
-    /**
-     * Extend it by interface merging for use in Player#meta.
-     */
-    export interface PlayerMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in Vehicle#meta.
-     */
-    export interface VehicleMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in Ped#meta.
-     */
-    export interface PedMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in Object#meta.
-     */
-    export interface ObjectMeta extends EntityMeta {}
-
-    /**
-     * Extend it by interface merging for use in VirtualEntity#meta.
-     */
-    export interface VirtualEntityMeta extends BaseObjectMeta {}
 
     export abstract class WorldObject extends BaseObject {
         dimension: number;

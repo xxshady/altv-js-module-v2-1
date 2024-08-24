@@ -2,8 +2,6 @@
  * @module @altv/shared
  */
 
-import { ColShapeMeta } from "@altv/server";
-
 declare module "@altv/shared" {
     export const defaultDimension: number;
     export const globalDimension: number;
@@ -599,6 +597,71 @@ declare module "@altv/shared" {
      * Extend it by interface merging for use in ped stream synced meta (class `Ped` on client & server, e.g. `ped.getStreamSyncedMeta`)
      */
     export interface PedStreamSyncedMeta extends EntityStreamSyncedMeta {}
+
+    /**
+     * Extend it by interface merging for use in BaseObject#meta.
+     */
+    export interface BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in Blip#meta.
+     */
+    export interface BlipMeta extends BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in Marker#meta.
+     */
+    export interface MarkerMeta extends BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in ColShape#meta.
+     */
+    export interface ColShapeMeta extends BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in Checkpoint#meta.
+     */
+    export interface CheckpointMeta extends ColShapeMeta {}
+
+    /**
+     * Extend it by interface merging for use in VoiceChannel#meta.
+     */
+    export interface VoiceChannelMeta extends BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in Entity#meta.
+     */
+    export interface EntityMeta extends BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in Player#meta.
+     */
+    export interface PlayerMeta extends EntityMeta {}
+
+    /**
+     * Extend it by interface merging for use in Player#meta.
+     */
+    export interface PlayerLocalMeta extends EntityMeta {}
+
+    /**
+     * Extend it by interface merging for use in Vehicle#meta.
+     */
+    export interface VehicleMeta extends EntityMeta {}
+
+    /**
+     * Extend it by interface merging for use in Ped#meta.
+     */
+    export interface PedMeta extends EntityMeta {}
+
+    /**
+     * Extend it by interface merging for use in Object#meta.
+     */
+    export interface ObjectMeta extends EntityMeta {}
+
+    /**
+     * Extend it by interface merging for use in VirtualEntity#meta.
+     */
+    export interface VirtualEntityMeta extends BaseObjectMeta {}
 
     export namespace Appearance {
         interface HeadOverlay {
