@@ -69,7 +69,7 @@ declare module "@altv/client" {
         radio?: boolean; // default: false
         clearCache?: boolean; // default: true
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -144,7 +144,7 @@ declare module "@altv/client" {
     export interface AudioFilterCreateOptions {
         hash: number | string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -196,7 +196,7 @@ declare module "@altv/client" {
         entity: WorldObject;
         categoryHash?: number; // default: 'radio' hashed
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -218,7 +218,7 @@ declare module "@altv/client" {
     export interface AudioOutputFrontendCreateOptions {
         categoryHash?: number; // default: 'radio' hashed
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -268,7 +268,7 @@ declare module "@altv/client" {
     export type PointBlipCreateOptions =
         | { pos: altShared.IVector3; entity?: never }
         | ({ entity: Entity; pos?: never } & {
-              initialData?: Partial<{
+              initialMeta?: Partial<{
                   meta: BlipMeta & Record<string, unknown>;
               }>;
           });
@@ -277,7 +277,7 @@ declare module "@altv/client" {
         | ({ blipType: altShared.Enums.BlipType.AREA } & altShared.AreaBlipCreateOptions)
         | ({ blipType: altShared.Enums.BlipType.RADIUS } & altShared.RadiusBlipCreateOptions)
         | (({ blipType: altShared.Enums.BlipType.DESTINATION } & PointBlipCreateOptions) & {
-              initialData?: Partial<{
+              initialMeta?: Partial<{
                   meta: BlipMeta & Record<string, unknown>;
               }>;
           });
@@ -289,7 +289,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: MarkerMeta & Record<string, unknown>;
         }>;
     }
@@ -419,7 +419,7 @@ declare module "@altv/client" {
         nextPos: altShared.IVector3;
         streamingDistance: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: CheckpointMeta & Record<string, unknown>;
         }>;
     }
@@ -607,7 +607,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: ObjectMeta & Record<string, unknown>;
         }>;
     }
@@ -707,7 +707,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: true
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: PedMeta & Record<string, unknown>;
         }>;
     }
@@ -760,7 +760,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: true
         streamingDistance?: number; // default: 300
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VehicleMeta & Record<string, unknown>;
         }>;
     }
@@ -869,7 +869,7 @@ declare module "@altv/client" {
     export interface RmlDocumentCreateOptions {
         url: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1175,7 +1175,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1186,7 +1186,7 @@ declare module "@altv/client" {
         streamingDistance: number;
         data?: Record<string, unknown>;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VirtualEntityMeta & Record<string, unknown>;
         }>;
     }
@@ -1257,7 +1257,7 @@ declare module "@altv/client" {
     export interface WebSocketClientCreateOptions {
         url: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1321,7 +1321,7 @@ declare module "@altv/client" {
         drawable: number | string; // default: 0
         targetTexture: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1331,7 +1331,7 @@ declare module "@altv/client" {
         drawable: number | string;
         targetTexture: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }

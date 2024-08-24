@@ -71,7 +71,7 @@ declare module "@altv/shared" {
         pos: IVector3;
         radius: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Meta & Record<string, unknown>;
         }>;
     }
@@ -81,7 +81,7 @@ declare module "@altv/shared" {
         radius: number;
         height: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Meta & Record<string, unknown>;
         }>;
     }
@@ -90,7 +90,7 @@ declare module "@altv/shared" {
         pos: IVector2;
         radius: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Meta & Record<string, unknown>;
         }>;
     }
@@ -99,7 +99,7 @@ declare module "@altv/shared" {
         pos1: IVector2;
         pos2: IVector3;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Meta & Record<string, unknown>;
         }>;
     }
@@ -110,7 +110,7 @@ declare module "@altv/shared" {
         x2: number;
         y2: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Meta & Record<string, unknown>;
         }>;
     }
@@ -120,7 +120,7 @@ declare module "@altv/shared" {
         maxZ: number;
         points: IVector2[];
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Meta & Record<string, unknown>;
         }>;
     }
@@ -135,7 +135,7 @@ declare module "@altv/shared" {
         | ({ colShapeType: Enums.ColShapeType.RECT } & ColShapeRectangleCreateOptions<Meta>)
         | ({ colShapeType: Enums.ColShapeType.POLYGON } & ColShapePolygonCreateOptions<Meta>)
     ) & {
-            initialData?: {
+            initialMeta?: {
                 meta: Meta & Record<string, unknown>;
             };
         };
@@ -163,7 +163,7 @@ declare module "@altv/shared" {
     export interface VirtualEntityGroupCreateOptions {
         maxEntitiesInStream: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -479,7 +479,7 @@ declare module "@altv/shared" {
         pos: IVector3;
         scale: IVector2;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -488,7 +488,7 @@ declare module "@altv/shared" {
         pos: IVector3;
         radius: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }

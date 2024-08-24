@@ -37,7 +37,7 @@ declare module "@altv/server" {
 
         blipType: altShared.Enums.BlipType;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: BlipMeta & Record<string, unknown>;
             syncedMeta: altShared.BlipSyncedMeta & Record<string, unknown>;
         }>;
@@ -240,7 +240,7 @@ declare module "@altv/server" {
         type: altShared.Enums.MarkerType;
         color?: altShared.IRGBA; // default: { r: 255, g: 255, b: 255, a: 255 }
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: MarkerMeta & Record<string, unknown>;
             syncedMeta: altShared.MarkerSyncedMeta & Record<string, unknown>;
         }>;
@@ -254,7 +254,7 @@ declare module "@altv/server" {
         color: altShared.RGBA;
         streamingDistance: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: CheckpointMeta & Record<string, unknown>;
             syncedMeta: altShared.CheckpointSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.CheckpointStreamSyncedMeta & Record<string, unknown>;
@@ -344,7 +344,7 @@ declare module "@altv/server" {
         lodDistance?: number; // default: 100
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: ObjectMeta & Record<string, unknown>;
             syncedMeta: altShared.ObjectSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.ObjectStreamSyncedMeta & Record<string, unknown>;
@@ -381,7 +381,7 @@ declare module "@altv/server" {
         heading?: number; // default: 0
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: PedMeta & Record<string, unknown>;
             syncedMeta: altShared.PedSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.PedStreamSyncedMeta & Record<string, unknown>;
@@ -605,7 +605,7 @@ declare module "@altv/server" {
         rot?: altShared.IVector3; // default: { x: 0, y: 0, z: 0 }
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VehicleMeta & Record<string, unknown>;
             syncedMeta: altShared.VehicleSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.VehicleStreamSyncedMeta & Record<string, unknown>;
@@ -801,7 +801,7 @@ declare module "@altv/server" {
 
         data?: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VirtualEntityMeta & Record<string, unknown>;
             // syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
@@ -855,7 +855,7 @@ declare module "@altv/server" {
         spatial: boolean;
         maxDistance?: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VoiceChannelMeta & Record<string, unknown>;
         }>;
     }

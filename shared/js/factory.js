@@ -48,10 +48,10 @@ function getEntityFactory(type) {
     };
 }
 
-function setupInitialData(entity, type, ctx) {
-    if (!ctx || !entity instanceof alt.BaseObject || !ctx.initialData) return;
+function setupInitialMeta(entity, type, ctx) {
+    if (!ctx || !entity instanceof alt.BaseObject || !ctx.initialMeta) return;
 
-    const { meta, syncedMeta, streamSyncedMeta } = ctx.initialData;
+    const { meta, syncedMeta, streamSyncedMeta } = ctx.initialMeta;
 
     if (meta) {
         for (const [key, value] of Object.entries(meta)) {
@@ -86,7 +86,7 @@ export function getFactoryCreateFunction(type, ctxCb) {
 
         const entity = cppBindings.createEntity(type, ctx);
 
-        if (entity) setupInitialData(entity, type, ctx);
+        if (entity) setupInitialMeta(entity, type, ctx);
 
         return entity;
     };
