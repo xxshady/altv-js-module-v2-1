@@ -3449,6 +3449,25 @@ declare module "@altv/shared" {
     }
 
     export namespace Symbols {
+        /**
+         * @example
+         * ```
+         * const myObj = {
+         *     a: 1,
+         *     b: 2,
+         *     [alt.Symbols.serialize]: () => {
+         *         return {
+         *             c: myObj.a + myObj.b
+         *         };
+         *     }
+         * };
+         *
+         * alt.Events.on("testabc", (obj) => {
+         *     alt.log(obj); // { c: 3 }
+         * });
+         * alt.Events.emit("testabc", myObj);
+         * ```
+         */
         export const serialize: unique symbol;
     }
 
