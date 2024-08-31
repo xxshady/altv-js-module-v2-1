@@ -45,7 +45,7 @@ function getClosestEntityOfType(type, options = {}) {
 }
 
 function getClosestPlayer(options = {}) {
-    const types = options.localOnly ? alt.Enums.BaseObjectType.LOCAL_PLAYER : [alt.Enums.BaseObjectType.LOCAL_PLAYER, alt.Enums.BaseObjectType.PLAYER];
+    const types = [alt.Enums.BaseObjectType.LOCAL_PLAYER, alt.Enums.BaseObjectType.PLAYER];
 
     return getClosestEntityOfType(types, options);
 }
