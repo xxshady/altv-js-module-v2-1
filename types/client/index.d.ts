@@ -1660,8 +1660,8 @@ declare module "@altv/client" {
         export function onPlayerVehicleSeatChange<T extends Player>(callback: GenericPlayerEventCallback<PlayerChangeVehicleSeatEventParameters, T>): altShared.Events.EventHandler;
         export function oncePlayerVehicleSeatChange<T extends Player>(callback: GenericPlayerEventCallback<PlayerChangeVehicleSeatEventParameters, T>): altShared.Events.EventHandler;
 
-        export function onVoiceConnectionUpdate(callback: GenericEventCallback<VoiceConnectionEventParameters>): altShared.Events.EventHandler;
-        export function onceVoiceConnectionUpdate(callback: GenericEventCallback<VoiceConnectionEventParameters>): altShared.Events.EventHandler;
+        export function onVoiceConnectionStateChange(callback: GenericEventCallback<VoiceConnectionStateChangeEventParameters>): altShared.Events.EventHandler;
+        export function onceVoiceConnectionStateChange(callback: GenericEventCallback<VoiceConnectionStateChangeEventParameters>): altShared.Events.EventHandler;
         export function onPlayerStartTalking<T extends Player>(callback: GenericPlayerEventCallback<{}, T>): altShared.Events.EventHandler;
         export function oncePlayerStartTalking<T extends Player>(callback: GenericPlayerEventCallback<{}, T>): altShared.Events.EventHandler;
         export function onPlayerStopTalking<T extends Player>(callback: GenericPlayerEventCallback<{}, T>): altShared.Events.EventHandler;
@@ -1700,7 +1700,7 @@ declare module "@altv/client" {
             object: WorldObject;
         }
 
-        interface VoiceConnectionEventParameters {
+        interface VoiceConnectionStateChangeEventParameters {
             state: altShared.Enums.VoiceConnectionState;
         }
 
