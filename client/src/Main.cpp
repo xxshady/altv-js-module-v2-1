@@ -5,12 +5,51 @@
 #include "CommandHandlers.h"
 #include "CJavaScriptRuntime.h"
 
-EXPORT alt::IScriptRuntime* CreateScriptRuntime(alt::ICore* core)
+#ifdef ALTV_JSV2_SHARED
+    #define ALTV_JSV2_EXPORT extern "C" __declspec(dllexport)
+    #define JSV2_ENTRY_POINT CreateScriptRuntime
+#else
+    #define ALTV_JSV2_EXPORT extern "C"
+    #define JSV2_ENTRY_POINT CreateScriptRuntimeJSv2
+#endif
+
+#ifndef ALTV_JSV2_SHARED
+extern js::Module altModule;
+extern js::Module compatibilityModule;
+extern js::Module compatibilityNativesModule;
+extern js::Module sharedCppBindingsModule;
+extern js::Module cppBindingsModule;
+extern js::Module nativesModule;
+extern js::Module sharedCompatibilityModule;
+extern js::Module sharedCompatibilityModule2;
+extern js::Module sharedModule;
+
+// Workaround to ensure linker doesnt exclude them from build
+static void KeepModules()
+{
+    static std::vector<js::Module*> modules;
+    modules.push_back(&altModule);
+    modules.push_back(&compatibilityModule);
+    modules.push_back(&compatibilityNativesModule);
+    modules.push_back(&sharedCppBindingsModule);
+    modules.push_back(&cppBindingsModule);
+    modules.push_back(&nativesModule);
+    modules.push_back(&sharedCompatibilityModule);
+    modules.push_back(&sharedCompatibilityModule2);
+    modules.push_back(&sharedModule);
+}
+#endif
+
+ALTV_JSV2_EXPORT alt::IScriptRuntime* JSV2_ENTRY_POINT(alt::ICore* core)
 {
     alt::ICore::SetInstance(core);
 
     CJavaScriptRuntime& runtime = CJavaScriptRuntime::Instance();
     if(!runtime.Initialize()) return nullptr;
+
+#ifndef ALTV_JSV2_SHARED
+    KeepModules();
+#endif
 
     core->SubscribeCommand("debughandles", js::DebugHandlesCommand);
     core->SubscribeCommand("dumpbinding", js::DumpBindingCommand);
@@ -25,12 +64,14 @@ EXPORT alt::IScriptRuntime* CreateScriptRuntime(alt::ICore* core)
     return &runtime;
 }
 
-EXPORT const char* GetType()
+#ifdef ALTV_JSV2_SHARED
+ALTV_JSV2_EXPORT const char* GetType()
 {
     return "jsv2";
 }
 
-EXPORT const char* GetSDKHash()
+ALTV_JSV2_EXPORT const char* GetSDKHash()
 {
     return ALT_SDK_VERSION;
 }
+#endif

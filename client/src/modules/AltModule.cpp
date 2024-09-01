@@ -504,7 +504,8 @@ extern js::Class playerClass, localPlayerClass, vehicleClass, pedClass, objectCl
                 textEncoderClass, textDecoderClass;
 extern js::Namespace eventsNamespace, discordNamespace, voiceNamespace, localStorageNamespace, statsNamespace, focusDataNamespace,
                     gxtNamespace, cursorNamespace, camNamespace, streamingNamespace, configFlagNamespace;
-static js::Module altModule("@altv/client", "@altv/shared",
+
+js::Module altModule("@altv/client", "@altv/shared",
     { &playerClass, &localPlayerClass, &vehicleClass, &pedClass, &objectClass,
     &audioClass, &audioFilterClass, &blipClass, &markerClass, &textLabelClass, &checkpointClass, &webViewClass, &fontClass,
     &localPedClass, &localVehicleClass, &rmlDocumentClass, &rmlElementClass, &localObjectClass, &webSocketClientClass,

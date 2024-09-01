@@ -14,7 +14,7 @@ static void CallNative(const v8::FunctionCallbackInfo<v8::Value>& _info)
 }
 
 // clang-format off
-static js::Module nativesModule("@altv/natives", [](js::ModuleTemplate& module)
+js::Module nativesModule("@altv/natives", [](js::ModuleTemplate& module)
 {
     std::vector<alt::INative*> natives = alt::ICore::Instance().GetAllNatives();
     for(alt::INative* native : natives)
