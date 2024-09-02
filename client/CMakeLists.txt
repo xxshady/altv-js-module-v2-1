@@ -91,9 +91,9 @@ if(NOT TARGET ${SDK_PROJECT_NAME})
     include(${ALTV_JSV2_CPP_SDK}/cpp-sdk/CMakeLists.txt)
 endif()
 
-add_custom_target(jsv2-bindings
-  node ../tools/generate-bindings.js ..
-  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+add_custom_command(
+    OUTPUT  ${CMAKE_CURRENT_SOURCE_DIR}/../build/BindingsMap.cpp
+    COMMAND node ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate-bindings.js ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 if(DYNAMIC_BUILD EQUAL 1)
@@ -104,6 +104,7 @@ if(DYNAMIC_BUILD EQUAL 1)
     ${PROJECT_SHARED_FILES}
     ../build/BindingsMap.cpp
   )
+
   set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 20
   )
@@ -115,9 +116,6 @@ if(DYNAMIC_BUILD EQUAL 1)
   target_link_libraries(${PROJECT_NAME} PRIVATE
     ${ALTV_JSV2_LINKS}
   )
-
-  add_dependencies(${PROJECT_NAME} ${SDK_PROJECT_NAME} jsv2-bindings)
-  # add_dependencies(${PROJECT_NAME} ${SDK_PROJECT_NAME} js-enums)
 else()
   ## STATIC
   add_library(
@@ -135,9 +133,6 @@ else()
   target_link_libraries(${PROJECT_NAME}-static PRIVATE
     ${ALTV_JSV2_LINKS}
   )
-
-  add_dependencies(${PROJECT_NAME}-static jsv2-bindings)
-  # add_dependencies(${PROJECT_NAME}-static js-enums)
 endif()
 
 if(ALTV_JSV2_DEINIT_CPPSDK)
