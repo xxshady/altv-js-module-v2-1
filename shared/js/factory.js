@@ -48,28 +48,28 @@ function getEntityFactory(type) {
     };
 }
 
-function setupInitialData(entity, type, ctx) {
-    if (!ctx || !entity instanceof alt.BaseObject || !ctx.initialData) return;
+function setupInitialMeta(baseObject, type, ctx) {
+    if (!ctx || !baseObject instanceof alt.BaseObject || !ctx.initialMeta) return;
 
-    const { meta, syncedMeta, streamSyncedMeta } = ctx.initialData;
+    const { meta, syncedMeta, streamSyncedMeta } = ctx.initialMeta;
 
     if (meta) {
+        // broken, see: https://github.com/altmp/altv-issues/issues/2330
+        // baseObject.setMultipleMetaData(meta);
         for (const [key, value] of Object.entries(meta)) {
-            entity.meta[key] = value;
+            baseObject.meta[key] = value;
         }
     }
 
-    if (entity instanceof alt.Entity && alt.isServer) {
+    // all types of server metadata and whats its bound to:
+    // https://docs.rs/altv/latest/altv/meta/index.html
+    if (alt.isServer) {
         if (syncedMeta) {
-            for (const [key, value] of Object.entries(syncedMeta)) {
-                entity.syncedMeta[key] = value;
-            }
+            baseObject.setMultipleSyncedMetaData(syncedMeta);
         }
 
-        if (streamSyncedMeta) {
-            for (const [key, value] of Object.entries(streamSyncedMeta)) {
-                entity.streamSyncedMeta[key] = value;
-            }
+        if (streamSyncedMeta && (baseObject instanceof alt.Entity || baseObject instanceof alt.Checkpoint || baseObject instanceof alt.VirtualEntity)) {
+            baseObject.setMultipleStreamSyncedMetaData(streamSyncedMeta);
         }
     }
 }
@@ -86,7 +86,7 @@ export function getFactoryCreateFunction(type, ctxCb) {
 
         const entity = cppBindings.createEntity(type, ctx);
 
-        if (entity) setupInitialData(entity, type, ctx);
+        if (entity) setupInitialMeta(entity, type, ctx);
 
         return entity;
     };
