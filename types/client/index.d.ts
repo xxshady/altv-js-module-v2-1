@@ -395,12 +395,11 @@ declare module "@altv/client" {
         isEntityIdIn(id: number): boolean;
         isPointIn(pos: altShared.Vector3): boolean;
 
-        public onCreate?(opts: altShared.ColShapeCreateOptions<ColShapeMeta>): void;
+        // public onCreate?(opts: altShared.ColShapeCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
         static readonly all: ReadonlyArray<ColShape>;
 
-        // commented because it breaks something
         // static create(opts: altShared.ColShapeCreateOptions<ColShapeMeta>): ColShape;
         static getByID(id: number): ColShape | null;
         static getByRemoteID(id: number): ColShape | null;
