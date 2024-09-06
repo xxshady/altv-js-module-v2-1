@@ -440,7 +440,6 @@ declare module "@altv/client" {
         isEntityIdIn(id: number): boolean;
         isPointIn(point: altShared.Vector3): boolean;
 
-        // @ts-expect-error
         public onCreate?(opts: CheckpointCreateOptions): void;
         public onDestroy?(): void;
 
@@ -1478,7 +1477,6 @@ declare module "@altv/client" {
     export abstract class ColShapeSphere extends ColShape {
         readonly radius: number;
 
-        // @ts-expect-error
         public onCreate?(opts: altShared.ColShapeSphereCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
@@ -1489,7 +1487,6 @@ declare module "@altv/client" {
         readonly radius: number;
         readonly height: number;
 
-        // @ts-expect-error
         public onCreate?(opts: altShared.ColShapeCylinderCreateOptions): void;
         public onDestroy?(): void;
 
@@ -1499,7 +1496,6 @@ declare module "@altv/client" {
     export abstract class ColShapeCircle extends ColShape {
         readonly radius: number;
 
-        // @ts-expect-error
         public onCreate?(opts: altShared.ColShapeCircleCreateOptions): void;
         public onDestroy?(): void;
 
@@ -1510,7 +1506,6 @@ declare module "@altv/client" {
         readonly min: altShared.Vector3;
         readonly max: altShared.Vector3;
 
-        // @ts-expect-error
         public onCreate?(opts: altShared.ColShapeCuboidCreateOptions): void;
         public onDestroy?(): void;
 
@@ -1521,7 +1516,6 @@ declare module "@altv/client" {
         readonly min: altShared.Vector2;
         readonly max: altShared.Vector2;
 
-        // @ts-expect-error
         public onCreate?(opts: altShared.ColShapeRectangleCreateOptions): void;
         public onDestroy?(): void;
 
@@ -1534,7 +1528,6 @@ declare module "@altv/client" {
 
         readonly points: ReadonlyArray<altShared.Vector2>;
 
-        // @ts-expect-error
         public onCreate?(opts: altShared.ColShapePolygonCreateOptions): void;
         public onDestroy?(): void;
 
