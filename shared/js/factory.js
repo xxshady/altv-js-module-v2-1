@@ -22,7 +22,6 @@ alt.Marker.create = getFactoryCreateFunction(alt.Enums.BaseObjectType.MARKER);
 alt.VirtualEntity.create = getFactoryCreateFunction(alt.Enums.BaseObjectType.VIRTUAL_ENTITY);
 alt.VirtualEntityGroup.create = getFactoryCreateFunction(alt.Enums.BaseObjectType.VIRTUAL_ENTITY_GROUP);
 
-alt.ColShape.create = getFactoryCreateFunction(alt.Enums.BaseObjectType.COLSHAPE);
 alt.ColShapeSphere.create = getFactoryCreateFunction(alt.Enums.BaseObjectType.COLSHAPE, (ctx) => ({ ...ctx, colShapeType: alt.Enums.ColShapeType.SPHERE }));
 alt.ColShapeCylinder.create = getFactoryCreateFunction(alt.Enums.BaseObjectType.COLSHAPE, (ctx) => ({ ...ctx, colShapeType: alt.Enums.ColShapeType.CYLINDER }));
 alt.ColShapeCircle.create = getFactoryCreateFunction(alt.Enums.BaseObjectType.COLSHAPE, (ctx) => ({ ...ctx, colShapeType: alt.Enums.ColShapeType.CIRCLE }));

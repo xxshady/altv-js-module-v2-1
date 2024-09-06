@@ -395,12 +395,8 @@ declare module "@altv/client" {
         isEntityIdIn(id: number): boolean;
         isPointIn(pos: altShared.Vector3): boolean;
 
-        // public onCreate?(opts: altShared.ColShapeCreateOptions<ColShapeMeta>): void;
-        public onDestroy?(): void;
-
         static readonly all: ReadonlyArray<ColShape>;
 
-        // static create(opts: altShared.ColShapeCreateOptions<ColShapeMeta>): ColShape;
         static getByID(id: number): ColShape | null;
         static getByRemoteID(id: number): ColShape | null;
 
@@ -423,6 +419,7 @@ declare module "@altv/client" {
         }>;
     }
 
+    // @ts-expect-error setFactory is not compatible with ColShape setFactory
     export abstract class Checkpoint extends ColShape {
         readonly scriptID: number;
         readonly isStreamedIn: boolean;
@@ -1487,7 +1484,7 @@ declare module "@altv/client" {
         readonly radius: number;
         readonly height: number;
 
-        public onCreate?(opts: altShared.ColShapeCylinderCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCylinderCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
         static create(opts: altShared.ColShapeCylinderCreateOptions<ColShapeMeta>): ColShapeCylinder;
@@ -1496,7 +1493,7 @@ declare module "@altv/client" {
     export abstract class ColShapeCircle extends ColShape {
         readonly radius: number;
 
-        public onCreate?(opts: altShared.ColShapeCircleCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCircleCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
         static create(opts: altShared.ColShapeCircleCreateOptions<ColShapeMeta>): ColShapeCircle;
@@ -1506,7 +1503,7 @@ declare module "@altv/client" {
         readonly min: altShared.Vector3;
         readonly max: altShared.Vector3;
 
-        public onCreate?(opts: altShared.ColShapeCuboidCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCuboidCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
         static create(opts: altShared.ColShapeCuboidCreateOptions<ColShapeMeta>): ColShapeCuboid;
@@ -1516,7 +1513,7 @@ declare module "@altv/client" {
         readonly min: altShared.Vector2;
         readonly max: altShared.Vector2;
 
-        public onCreate?(opts: altShared.ColShapeRectangleCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeRectangleCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
         static create(opts: altShared.ColShapeRectangleCreateOptions<ColShapeMeta>): ColShapeRectangle;
@@ -1528,7 +1525,7 @@ declare module "@altv/client" {
 
         readonly points: ReadonlyArray<altShared.Vector2>;
 
-        public onCreate?(opts: altShared.ColShapePolygonCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapePolygonCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
         static create(opts: altShared.ColShapePolygonCreateOptions<ColShapeMeta>): ColShapePolygon;
