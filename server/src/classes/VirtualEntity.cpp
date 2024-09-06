@@ -34,7 +34,7 @@ static void SetMultipleSyncedMetaData(js::FunctionContext& ctx)
     alt::IVirtualEntity* entity = ctx.GetThisObject<alt::IVirtualEntity>();
 
     js::Object dict;
-    if(!ctx.GetArg(0, dict)) return;
+    if (!ctx.GetArg(0, dict, js::Type::OBJECT)) return;
 
     std::unordered_map<std::string, alt::MValue> values;
     for (auto key : dict.GetKeys())
@@ -81,7 +81,7 @@ static void SetMultipleStreamSyncedMetaData(js::FunctionContext& ctx)
     alt::IVirtualEntity* entity = ctx.GetThisObject<alt::IVirtualEntity>();
 
     js::Object dict;
-    if(!ctx.GetArg(0, dict)) return;
+    if (!ctx.GetArg(0, dict, js::Type::OBJECT)) return;
 
     std::unordered_map<std::string, alt::MValue> values;
     for (auto key : dict.GetKeys())
