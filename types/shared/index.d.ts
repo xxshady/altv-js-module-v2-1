@@ -125,21 +125,6 @@ declare module "@altv/shared" {
         }>;
     }
 
-    type ColShapeCreateOptions<Meta> = {
-        colShapeType: Enums.ColShapeType;
-    } & (
-        | ({ colShapeType: Enums.ColShapeType.SPHERE } & ColShapeSphereCreateOptions<Meta>)
-        | ({ colShapeType: Enums.ColShapeType.CYLINDER } & ColShapeCylinderCreateOptions<Meta>)
-        | ({ colShapeType: Enums.ColShapeType.CIRCLE } & ColShapeCircleCreateOptions<Meta>)
-        | ({ colShapeType: Enums.ColShapeType.CUBOID } & ColShapeCuboidCreateOptions<Meta>)
-        | ({ colShapeType: Enums.ColShapeType.RECT } & ColShapeRectangleCreateOptions<Meta>)
-        | ({ colShapeType: Enums.ColShapeType.POLYGON } & ColShapePolygonCreateOptions<Meta>)
-    ) & {
-            initialMeta?: {
-                meta: Meta & Record<string, unknown>;
-            };
-        };
-
     export abstract class Resource {
         readonly type: string;
         readonly path: string;
