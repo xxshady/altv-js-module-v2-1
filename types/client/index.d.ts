@@ -61,7 +61,7 @@ declare module "@altv/client" {
     export function getPoolCount(pool: string): number;
     export function getPoolEntities(pool: string): Array<number>;
 
-    export function updateClipContext(context: Record<string, string>);
+    export function updateClipContext(context: Record<string, string>): void;
 
     export interface AudioCreateOptions {
         source: string;
@@ -69,7 +69,7 @@ declare module "@altv/client" {
         radio?: boolean; // default: false
         clearCache?: boolean; // default: true
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -144,7 +144,7 @@ declare module "@altv/client" {
     export interface AudioFilterCreateOptions {
         hash: number | string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -196,7 +196,7 @@ declare module "@altv/client" {
         entity: WorldObject;
         categoryHash?: number; // default: 'radio' hashed
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -218,7 +218,7 @@ declare module "@altv/client" {
     export interface AudioOutputFrontendCreateOptions {
         categoryHash?: number; // default: 'radio' hashed
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -268,7 +268,7 @@ declare module "@altv/client" {
     export type PointBlipCreateOptions =
         | { pos: altShared.IVector3; entity?: never }
         | ({ entity: Entity; pos?: never } & {
-              initialData?: Partial<{
+              initialMeta?: Partial<{
                   meta: BlipMeta & Record<string, unknown>;
               }>;
           });
@@ -277,7 +277,7 @@ declare module "@altv/client" {
         | ({ blipType: altShared.Enums.BlipType.AREA } & altShared.AreaBlipCreateOptions)
         | ({ blipType: altShared.Enums.BlipType.RADIUS } & altShared.RadiusBlipCreateOptions)
         | (({ blipType: altShared.Enums.BlipType.DESTINATION } & PointBlipCreateOptions) & {
-              initialData?: Partial<{
+              initialMeta?: Partial<{
                   meta: BlipMeta & Record<string, unknown>;
               }>;
           });
@@ -289,7 +289,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: MarkerMeta & Record<string, unknown>;
         }>;
     }
@@ -395,12 +395,8 @@ declare module "@altv/client" {
         isEntityIdIn(id: number): boolean;
         isPointIn(pos: altShared.Vector3): boolean;
 
-        public onCreate?(opts: altShared.ColShapeCreateOptions): void;
-        public onDestroy?(): void;
-
         static readonly all: ReadonlyArray<ColShape>;
 
-        static create(opts: altShared.ColShapeCreateOptions): ColShape;
         static getByID(id: number): ColShape | null;
         static getByRemoteID(id: number): ColShape | null;
 
@@ -418,11 +414,12 @@ declare module "@altv/client" {
         nextPos: altShared.IVector3;
         streamingDistance: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: CheckpointMeta & Record<string, unknown>;
         }>;
     }
 
+    // @ts-expect-error setFactory is not compatible with ColShape setFactory
     export abstract class Checkpoint extends ColShape {
         readonly scriptID: number;
         readonly isStreamedIn: boolean;
@@ -440,7 +437,6 @@ declare module "@altv/client" {
         isEntityIdIn(id: number): boolean;
         isPointIn(point: altShared.Vector3): boolean;
 
-        // @ts-expect-error
         public onCreate?(opts: CheckpointCreateOptions): void;
         public onDestroy?(): void;
 
@@ -606,7 +602,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: ObjectMeta & Record<string, unknown>;
         }>;
     }
@@ -706,7 +702,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: true
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: PedMeta & Record<string, unknown>;
         }>;
     }
@@ -759,7 +755,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: true
         streamingDistance?: number; // default: 300
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VehicleMeta & Record<string, unknown>;
         }>;
     }
@@ -868,7 +864,7 @@ declare module "@altv/client" {
     export interface RmlDocumentCreateOptions {
         url: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1174,7 +1170,7 @@ declare module "@altv/client" {
         useStreaming?: boolean; // default: false
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1185,7 +1181,7 @@ declare module "@altv/client" {
         streamingDistance: number;
         data?: Record<string, unknown>;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VirtualEntityMeta & Record<string, unknown>;
         }>;
     }
@@ -1256,7 +1252,7 @@ declare module "@altv/client" {
     export interface WebSocketClientCreateOptions {
         url: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1320,7 +1316,7 @@ declare module "@altv/client" {
         drawable: number | string; // default: 0
         targetTexture: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1330,7 +1326,7 @@ declare module "@altv/client" {
         drawable: number | string;
         targetTexture: string;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -1446,6 +1442,16 @@ declare module "@altv/client" {
      */
     export interface VirtualEntityMeta extends BaseObjectMeta {}
 
+    /**
+     * Extend it by interface merging for use in ColShape#meta.
+     */
+    export interface ColShapeMeta extends BaseObjectMeta {}
+
+    /**
+     * Extend it by interface merging for use in Checkpoint#meta.
+     */
+    export interface CheckpointMeta extends ColShapeMeta {}
+
     export abstract class WorldObject extends BaseObject {
         dimension: number;
         pos: altShared.Vector3;
@@ -1468,54 +1474,49 @@ declare module "@altv/client" {
     export abstract class ColShapeSphere extends ColShape {
         readonly radius: number;
 
-        // @ts-expect-error
-        public onCreate?(opts: altShared.ColShapeSphereCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeSphereCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeSphereCreateOptions): ColShapeSphere;
+        static create(opts: altShared.ColShapeSphereCreateOptions<ColShapeMeta>): ColShapeSphere;
     }
 
     export abstract class ColShapeCylinder extends ColShape {
         readonly radius: number;
         readonly height: number;
 
-        // @ts-expect-error
-        public onCreate?(opts: altShared.ColShapeCylinderCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCylinderCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCylinderCreateOptions): ColShapeCylinder;
+        static create(opts: altShared.ColShapeCylinderCreateOptions<ColShapeMeta>): ColShapeCylinder;
     }
 
     export abstract class ColShapeCircle extends ColShape {
         readonly radius: number;
 
-        // @ts-expect-error
-        public onCreate?(opts: altShared.ColShapeCircleCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCircleCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCircleCreateOptions): ColShapeCircle;
+        static create(opts: altShared.ColShapeCircleCreateOptions<ColShapeMeta>): ColShapeCircle;
     }
 
     export abstract class ColShapeCuboid extends ColShape {
         readonly min: altShared.Vector3;
         readonly max: altShared.Vector3;
 
-        // @ts-expect-error
-        public onCreate?(opts: altShared.ColShapeCuboidCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCuboidCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCuboidCreateOptions): ColShapeCuboid;
+        static create(opts: altShared.ColShapeCuboidCreateOptions<ColShapeMeta>): ColShapeCuboid;
     }
 
     export abstract class ColShapeRectangle extends ColShape {
         readonly min: altShared.Vector2;
         readonly max: altShared.Vector2;
 
-        // @ts-expect-error
-        public onCreate?(opts: altShared.ColShapeRectangleCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeRectangleCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeRectangleCreateOptions): ColShapeRectangle;
+        static create(opts: altShared.ColShapeRectangleCreateOptions<ColShapeMeta>): ColShapeRectangle;
     }
 
     export abstract class ColShapePolygon extends ColShape {
@@ -1524,11 +1525,10 @@ declare module "@altv/client" {
 
         readonly points: ReadonlyArray<altShared.Vector2>;
 
-        // @ts-expect-error
-        public onCreate?(opts: altShared.ColShapePolygonCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapePolygonCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapePolygonCreateOptions): ColShapePolygon;
+        static create(opts: altShared.ColShapePolygonCreateOptions<ColShapeMeta>): ColShapePolygon;
     }
 
     export namespace Data {

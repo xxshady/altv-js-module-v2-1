@@ -37,7 +37,7 @@ declare module "@altv/server" {
 
         blipType: altShared.Enums.BlipType;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: BlipMeta & Record<string, unknown>;
             syncedMeta: altShared.BlipSyncedMeta & Record<string, unknown>;
         }>;
@@ -159,49 +159,49 @@ declare module "@altv/server" {
     export abstract class ColShapeSphere extends ColShape {
         readonly radius: number;
 
-        public onCreate?(opts: altShared.ColShapeSphereCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeSphereCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeSphereCreateOptions): ColShapeSphere;
+        static create(opts: altShared.ColShapeSphereCreateOptions<ColShapeMeta>): ColShapeSphere;
     }
 
     export abstract class ColShapeCylinder extends ColShape {
         readonly radius: number;
         readonly height: number;
 
-        public onCreate?(opts: altShared.ColShapeCylinderCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCylinderCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCylinderCreateOptions): ColShapeCylinder;
+        static create(opts: altShared.ColShapeCylinderCreateOptions<ColShapeMeta>): ColShapeCylinder;
     }
 
     export abstract class ColShapeCircle extends ColShape {
         readonly radius: number;
 
-        public onCreate?(opts: altShared.ColShapeCircleCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCircleCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCircleCreateOptions): ColShapeCircle;
+        static create(opts: altShared.ColShapeCircleCreateOptions<ColShapeMeta>): ColShapeCircle;
     }
 
     export abstract class ColShapeCuboid extends ColShape {
         readonly min: altShared.Vector3;
         readonly max: altShared.Vector3;
 
-        public onCreate?(opts: altShared.ColShapeCuboidCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeCuboidCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeCuboidCreateOptions): ColShapeCuboid;
+        static create(opts: altShared.ColShapeCuboidCreateOptions<ColShapeMeta>): ColShapeCuboid;
     }
 
     export abstract class ColShapeRectangle extends ColShape {
         readonly min: altShared.Vector2;
         readonly max: altShared.Vector2;
 
-        public onCreate?(opts: altShared.ColShapeRectangleCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapeRectangleCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapeRectangleCreateOptions): ColShapeRectangle;
+        static create(opts: altShared.ColShapeRectangleCreateOptions<ColShapeMeta>): ColShapeRectangle;
     }
 
     export abstract class ColShapePolygon extends ColShape {
@@ -210,10 +210,10 @@ declare module "@altv/server" {
 
         readonly points: ReadonlyArray<altShared.Vector2>;
 
-        public onCreate?(opts: altShared.ColShapePolygonCreateOptions): void;
+        public onCreate?(opts: altShared.ColShapePolygonCreateOptions<ColShapeMeta>): void;
         public onDestroy?(): void;
 
-        static create(opts: altShared.ColShapePolygonCreateOptions): ColShapePolygon;
+        static create(opts: altShared.ColShapePolygonCreateOptions<ColShapeMeta>): ColShapePolygon;
     }
 
     export abstract class ColShape extends WorldObject {
@@ -240,7 +240,7 @@ declare module "@altv/server" {
         type: altShared.Enums.MarkerType;
         color?: altShared.IRGBA; // default: { r: 255, g: 255, b: 255, a: 255 }
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: MarkerMeta & Record<string, unknown>;
             syncedMeta: altShared.MarkerSyncedMeta & Record<string, unknown>;
         }>;
@@ -254,7 +254,7 @@ declare module "@altv/server" {
         color: altShared.RGBA;
         streamingDistance: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: CheckpointMeta & Record<string, unknown>;
             syncedMeta: altShared.CheckpointSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.CheckpointStreamSyncedMeta & Record<string, unknown>;
@@ -344,7 +344,7 @@ declare module "@altv/server" {
         lodDistance?: number; // default: 100
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: ObjectMeta & Record<string, unknown>;
             syncedMeta: altShared.ObjectSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.ObjectStreamSyncedMeta & Record<string, unknown>;
@@ -381,7 +381,7 @@ declare module "@altv/server" {
         heading?: number; // default: 0
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: PedMeta & Record<string, unknown>;
             syncedMeta: altShared.PedSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.PedStreamSyncedMeta & Record<string, unknown>;
@@ -605,7 +605,7 @@ declare module "@altv/server" {
         rot?: altShared.IVector3; // default: { x: 0, y: 0, z: 0 }
         streamingDistance?: number; // default: 0
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VehicleMeta & Record<string, unknown>;
             syncedMeta: altShared.VehicleSyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.VehicleStreamSyncedMeta & Record<string, unknown>;
@@ -630,7 +630,6 @@ declare module "@altv/server" {
         readonly isDaylightOn: boolean;
         readonly isNightlightOn: boolean;
         readonly isFlamethrowerActive: boolean;
-        readonly gameStateBase64: string;
         readonly wheelsCount: number;
         readonly repairsCount: number;
         readonly hasArmoredWindows: boolean;
@@ -802,7 +801,7 @@ declare module "@altv/server" {
 
         data?: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VirtualEntityMeta & Record<string, unknown>;
             // syncedMeta: altShared.VirtualEntitySyncedMeta & Record<string, unknown>;
             streamSyncedMeta: altShared.VirtualEntityStreamSyncedMeta & Record<string, unknown>;
@@ -856,7 +855,7 @@ declare module "@altv/server" {
         spatial: boolean;
         maxDistance?: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: VoiceChannelMeta & Record<string, unknown>;
         }>;
     }

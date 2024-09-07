@@ -2,8 +2,6 @@
  * @module @altv/shared
  */
 
-import { ColShapeMeta } from "@altv/server";
-
 declare module "@altv/shared" {
     export const defaultDimension: number;
     export const globalDimension: number;
@@ -69,78 +67,63 @@ declare module "@altv/shared" {
         destroy(): void;
     }
 
-    export interface ColShapeSphereCreateOptions {
+    export interface ColShapeSphereCreateOptions<Meta> {
         pos: IVector3;
         radius: number;
 
-        initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+        initialMeta?: Partial<{
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeCylinderCreateOptions {
+    export interface ColShapeCylinderCreateOptions<Meta> {
         pos: IVector3;
         radius: number;
         height: number;
 
-        initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+        initialMeta?: Partial<{
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeCircleCreateOptions {
+    export interface ColShapeCircleCreateOptions<Meta> {
         pos: IVector2;
         radius: number;
 
-        initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+        initialMeta?: Partial<{
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeCuboidCreateOptions {
+    export interface ColShapeCuboidCreateOptions<Meta> {
         pos1: IVector2;
         pos2: IVector3;
 
-        initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+        initialMeta?: Partial<{
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapeRectangleCreateOptions {
+    export interface ColShapeRectangleCreateOptions<Meta> {
         x1: number;
         y1: number;
         x2: number;
         y2: number;
 
-        initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+        initialMeta?: Partial<{
+            meta: Meta & Record<string, unknown>;
         }>;
     }
 
-    export interface ColShapePolygonCreateOptions {
+    export interface ColShapePolygonCreateOptions<Meta> {
         minZ: number;
         maxZ: number;
         points: IVector2[];
 
-        initialData?: Partial<{
-            meta: ColShapeMeta & Record<string, unknown>;
+        initialMeta?: Partial<{
+            meta: Meta & Record<string, unknown>;
         }>;
     }
-
-    type ColShapeCreateOptions = {
-        colShapeType: Enums.ColShapeType;
-    } & (
-        | ({ colShapeType: Enums.ColShapeType.SPHERE } & ColShapeSphereCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.CYLINDER } & ColShapeCylinderCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.CIRCLE } & ColShapeCircleCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.CUBOID } & ColShapeCuboidCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.RECT } & ColShapeRectangleCreateOptions)
-        | ({ colShapeType: Enums.ColShapeType.POLYGON } & ColShapePolygonCreateOptions)
-    ) & {
-            initialData?: {
-                meta: ColShapeMeta & Record<string, unknown>;
-            };
-        };
 
     export abstract class Resource {
         readonly type: string;
@@ -165,7 +148,7 @@ declare module "@altv/shared" {
     export interface VirtualEntityGroupCreateOptions {
         maxEntitiesInStream: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -481,7 +464,7 @@ declare module "@altv/shared" {
         pos: IVector3;
         scale: IVector2;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
@@ -490,7 +473,7 @@ declare module "@altv/shared" {
         pos: IVector3;
         radius: number;
 
-        initialData?: Partial<{
+        initialMeta?: Partial<{
             meta: Record<string, unknown>;
         }>;
     }
