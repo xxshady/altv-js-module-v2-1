@@ -102,7 +102,8 @@ extern js::Class baseObjectClass, worldObjectClass, entityClass, resourceClass, 
 // TODO (xLuxy): bind colshape classes except colShapeClass
 extern js::Class colShapeClass, colShapeCircleClass, colShapeCuboidClass, colShapeCylinderClass, colShapePolyClass, colShapeRectClass, colShapeSphereClass;
 extern js::Namespace enumsNamespace, sharedEventsNamespace, fileNamespace, profilerNamespace, symbolsNamespace;
-js::Module sharedModule("@altv/shared", "", { &baseObjectClass, &worldObjectClass, &entityClass, &colShapeClass, &resourceClass, &bufferClass }, [](js::ModuleTemplate& module)
+
+static js::Module sharedModule("@altv/shared", "", { &baseObjectClass, &worldObjectClass, &entityClass, &colShapeClass, &resourceClass, &bufferClass }, [](js::ModuleTemplate& module)
 {
     module.StaticProperty("defaultDimension", alt::DEFAULT_DIMENSION);
     module.StaticProperty("globalDimension", alt::GLOBAL_DIMENSION);

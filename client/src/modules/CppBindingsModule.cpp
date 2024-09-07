@@ -56,8 +56,9 @@ static void GetStreamedInVirtualEntities(js::FunctionContext& ctx)
 
 // clang-format off
 extern js::Module sharedCppBindingsModule;
+
 // !!! Make sure to keep the name as cppBindings
-extern js::Module cppBindingsModule("cppBindings", "sharedCppBindings", [](js::ModuleTemplate& module)
+static js::Module cppBindingsModule("cppBindings", "sharedCppBindings", [](js::ModuleTemplate& module)
 {
     module.StaticFunction("answerRPC", AnswerRPC);
     module.StaticFunction("sendRPC", SendRPC);
