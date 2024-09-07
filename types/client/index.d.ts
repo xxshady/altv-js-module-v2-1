@@ -496,6 +496,7 @@ declare module "@altv/client" {
         percentSubmerged: number;
         percentSubmergedRatio: number;
         driveBiasFront: number;
+        driveBiasRear: number;
         acceleration: number;
         initialDriveGears: number;
         driveInertia: number;
@@ -1145,6 +1146,13 @@ declare module "@altv/client" {
         setWheelTyreWidth(wheelId: number, width: number): void;
         getWheelSurfaceMaterial(wheelId: number): number;
         resetDashboardLights(): void;
+
+        getWheelDynamicFlag(wheelId: number, flag: number): boolean;
+        setWheelDynamicFlag(wheelId: number, flag: number, state: boolean): void;
+        getWheelConfigFlag(wheelId: number, flag: number): boolean;
+        setWheelConfigFlag(wheelId: number, flag: number, state: boolean): void;
+
+        setupTransmission(): void;
 
         static readonly all: ReadonlyArray<Vehicle>;
         static readonly streamedIn: ReadonlyArray<Vehicle>;
