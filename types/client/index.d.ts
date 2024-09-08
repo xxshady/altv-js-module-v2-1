@@ -2112,10 +2112,11 @@ declare module "@altv/client" {
 
     export namespace FocusData {
         export const isFocusOverriden: boolean;
-        export let focusOverridePos: altShared.Vector3;
+        export const focusOverridePos: altShared.Vector3;
         export let focusOverrideEntity: Entity | null;
         export const focusOverrideOffset: altShared.Vector3;
 
+        export function overrideFocus(pos: altShared.IVector3, offset?: altShared.IVector3): void;
         export function clearFocusOverride(): void;
     }
 

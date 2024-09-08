@@ -6,12 +6,27 @@
 const { isVector3 } = requireBinding("shared/utils.js");
 
 class FocusData {
+    static get isFocusOverriden() {
+        return alt.FocusData.isFocusOverriden;
+    }
+
+    static get focusOverridePos() {
+        return alt.FocusData.focusOverridePos;
+    }
+
+    static get focusOverrideOffset() {
+        return alt.FocusData.focusOverrideOffset;
+    }
+
+    static get focusOverrideEntity() {
+        return alt.FocusData.focusOverrideEntity;
+    }
+
     static overrideFocus(value, focusOffset) {
         if (isVector3(value)) {
             focusOffset ??= { x: 0, y: 0, z: 0 };
 
-            alt.FocusData.focusOverridePos = value;
-            alt.FocusData.focusOverrideOffset = focusOffset;
+            alt.FocusData.overrideFocus(value, focusOffset);
             return;
         }
 
