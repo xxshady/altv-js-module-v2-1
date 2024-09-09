@@ -68,6 +68,17 @@ void js::Wrapper::DynamicPropertyEnumeratorHandler(const v8::PropertyCallbackInf
     data->enumerator(ctx);
 }
 
+void js::Wrapper::BoundFunctionHandler(v8::Local<v8::Name>, const v8::PropertyCallbackInfo<v8::Value>& info)
+{
+    internal::FunctionCallback callback = (internal::FunctionCallback)info.Data().As<v8::External>()->Value();
+    v8::Local<v8::Function> method = WrapFunction(callback)->GetFunction(info.GetIsolate()->GetEnteredOrMicrotaskContext()).ToLocalChecked();
+    js::Object methodObj(method.As<v8::Object>());
+    js::Function bindFunc = methodObj.Get<v8::Local<v8::Value>>("bind").As<v8::Function>();
+    v8::Local<v8::Value> boundFunction = bindFunc.Call<v8::Local<v8::Value>>(methodObj, info.This()).value();
+
+    info.GetReturnValue().Set(boundFunction);
+}
+
 void js::ModuleTemplate::Namespace(const std::string& name, js::Namespace& namespace_)
 {
     Get()->Set(JSValue(name), namespace_.Get(GetIsolate()));
@@ -81,13 +92,13 @@ void js::ModuleTemplate::Namespace(js::Namespace& namespace_)
 static void StaticBindingExportGetter(v8::Local<v8::Name>, const v8::PropertyCallbackInfo<v8::Value>& info)
 {
     js::LazyPropertyContext ctx{ info };
-    std::string exportName = js::CppValue(info.Data().As<v8::String>());
-    ctx.Return(ctx.GetResource()->GetBindingExport(exportName));
+    uint8_t export_ = js::CppValue(info.Data().As<v8::Integer>());
+    ctx.Return(ctx.GetResource()->GetBindingExport((js::BindingExport)export_));
 }
 
-void js::ModuleTemplate::StaticBindingExport(const std::string& name, const std::string& exportName)
+void js::ModuleTemplate::StaticBindingExport(const std::string& name, BindingExport export_)
 {
-    Get()->SetLazyDataProperty(JSValue(name), StaticBindingExportGetter, JSValue(exportName));
+    Get()->SetLazyDataProperty(JSValue(name), StaticBindingExportGetter, JSValue((uint8_t)export_));
 }
 
 js::ClassTemplate::DynamicPropertyData* js::ClassTemplate::GetDynamicPropertyData(v8::Isolate* isolate, Class* class_, const std::string& name)
@@ -138,37 +149,3 @@ void js::ClassTemplate::Inherit(ClassTemplate& parent)
     // Inherit static methods
     for(auto& [name, method] : parent.staticMethods) StaticFunction(name, method);
 }
-
-#ifdef DEBUG_BINDINGS
-void js::ClassTemplate::DumpRegisteredKeys()
-{
-    std::fstream outFile("v2debug/" + class_->GetName() + ".txt", std::ios::out);
-    if(!outFile.good()) return;
-
-    std::stringstream ss;
-    ss << class_->GetName() << ": (Inherits from " << (class_->GetParentClass() ? class_->GetParentClass()->GetName() : "<none>") << ")\n\n";
-
-    std::unordered_map<std::string, std::vector<std::string>> keysSortedByType;
-    for(auto& [key, type] : registeredKeys)
-    {
-        if(!keysSortedByType.contains(type)) keysSortedByType[type] = std::vector<std::string>{ key };
-        else
-            keysSortedByType[type].push_back(key);
-    }
-
-    for(auto& [type, keys] : keysSortedByType)
-    {
-        ss << type << ":\n";
-        for(auto& key : keys)
-        {
-            ss << "\t" << key << "\n";
-        }
-        ss << "\n";
-    }
-
-    outFile << ss.str();
-    outFile.close();
-
-    registeredKeys.clear();
-}
-#endif

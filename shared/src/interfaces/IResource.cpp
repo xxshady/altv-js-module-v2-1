@@ -8,7 +8,7 @@ void js::IResource::RequireBindingNamespaceWrapper(js::FunctionContext& ctx)
     if(!ctx.GetArg(0, bindingName)) return;
 
     Binding& binding = Binding::Get(bindingName);
-    if(!ctx.Check(binding.IsValid(), "Invalid binding name")) return;
+    if(!ctx.Check(binding.IsValid(), "Invalid binding name " + bindingName)) return;
     IResource* resource = ctx.GetResource();
     if(!resource) return;
 
@@ -19,7 +19,8 @@ void js::IResource::RequireBindingNamespaceWrapper(js::FunctionContext& ctx)
 
 void js::IResource::InitializeBinding(js::Binding* binding)
 {
-    if(binding->GetName().ends_with("bootstrap.js")) return;  // Skip bootstrap bindings, those are handled separately
+    if(binding->IsBootstrapBinding()) return;                                       // Skip bootstrap bindings, those are handled separately
+    if(binding->IsCompatibilityBinding() && !IsCompatibilityModeEnabled()) return;  // Don't load compatibility bindings if not enabled
 
     v8::Local<v8::Module> module = binding->GetCompiledModule(this);
     if(module.IsEmpty())
@@ -39,8 +40,10 @@ void js::IResource::InitializeBinding(js::Binding* binding)
     if(module->GetStatus() != v8::Module::Status::kEvaluated)
     {
         Logger::Error("INTERNAL ERROR: Failed to evaluate binding module", binding->GetName());
-        v8::Local<v8::Value> exception = module->GetException();
-        if(!exception.IsEmpty()) Logger::Error("INTERNAL ERROR:", *v8::String::Utf8Value(isolate, exception));
+        js::Object exceptionObj = module->GetException().As<v8::Object>();
+        js::Logger::Error(exceptionObj.Get<std::string>("message"));
+        std::string stack = exceptionObj.Get<std::string>("stack");
+        if(!stack.empty()) js::Logger::Error(stack);
     }
 }
 
@@ -68,4 +71,12 @@ extern js::Class bufferClass;
 bool js::IResource::IsBuffer(v8::Local<v8::Value> val)
 {
     return val->IsObject() && val.As<v8::Object>()->InstanceOf(GetContext(), bufferClass.GetTemplate(isolate).Get()->GetFunction(GetContext()).ToLocalChecked()).ToChecked();
+}
+
+void js::IResource::AddOwnedBuffer(Buffer* buffer, v8::Local<v8::Object> obj)
+{
+    Persistent<v8::Object> persistent(GetIsolate(), obj);
+    persistent.SetWeak(buffer, js::internal::WeakHandleCallback<js::Buffer>, v8::WeakCallbackType::kParameter);
+    persistent.SetWrapperClassId(bufferClass.GetClassId());
+    ownedBuffers.insert({ buffer, persistent });
 }

@@ -15,19 +15,10 @@ namespace js
         CJavaScriptResource* resource;
 
         void* pointers[32] = { 0 };
-        char* stringValues[32] = { 0 };
         int pointersCount = 0;
-        int stringsCount = 0;
         int returnsCount = 1;
 
-        char* SaveString(const std::string& str)
-        {
-            char* strVal = (char*)malloc(str.size() + 1);
-            memcpy(strVal, str.c_str(), str.size() + 1);
-            stringValues[stringsCount++] = strVal;
-
-            return strVal;
-        }
+        char* SaveString(const std::string& str);
 
         template<typename T>
         T* SavePointer(T val)
@@ -66,8 +57,7 @@ namespace js
             constexpr bool isPointer = std::is_pointer_v<T>;
             using CleanT = std::remove_pointer_t<T>;
 
-            CleanT value;
-            if(!ctx.GetArg(index, value)) return false;
+            CleanT value = ctx.GetArg<CleanT>(index);
 
             if constexpr(isPointer)
             {
@@ -90,11 +80,13 @@ namespace js
         template<>
         bool PushArg<char*>(js::FunctionContext& ctx, int index)
         {
+            if(!ctx.CheckArgType(index, { js::Type::STRING, js::Type::NULL_TYPE })) return false;
             v8::Local<v8::Value> val;
             if(!ctx.GetArg(index, val)) return false;
 
-            char* ptr = nullptr;
-            if(val->IsString())
+            char* ptr;
+            if(val->IsNull()) ptr = nullptr;
+            else
             {
                 std::string str = js::CppValue(val.As<v8::String>());
                 ptr = SaveString(str);
@@ -108,7 +100,30 @@ namespace js
             v8::Local<v8::Value> val;
             if(!ctx.GetArg(index, val)) return false;
 
-            nativeContext->Push(GetBufferFromValue(val));
+            void* buffer;
+            if(val->IsNull()) buffer = nullptr;
+            else
+            {
+                buffer = GetBufferFromValue(val);
+                if(!ctx.Check(buffer, "Invalid buffer")) return false;
+            }
+            nativeContext->Push(buffer);
+            return true;
+        }
+        template<>
+        bool PushArg<int32_t>(js::FunctionContext& ctx, int index)
+        {
+            int32_t val;
+            if(ctx.GetArgType(index) == js::Type::BASE_OBJECT)
+            {
+                alt::IEntity* entity;
+                if(!ctx.GetArg(index, entity)) return false;
+                val = (int32_t)entity->GetScriptID();
+            }
+            else if(!ctx.GetArg(index, val))
+                return false;
+
+            nativeContext->Push(val);
             return true;
         }
 
@@ -123,6 +138,6 @@ namespace js
         ~NativeInvoker();
 
     public:
-        static bool Invoke(js::FunctionContext& ctx, alt::INative* native);
+        static bool Invoke(js::FunctionContext& ctx, alt::INative* native, bool addVoidReturn = false);
     };
 }  // namespace js

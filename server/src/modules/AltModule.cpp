@@ -1,11 +1,6 @@
 #include "Module.h"
 #include "Namespace.h"
 
-static void GetNetTime(js::FunctionContext& ctx)
-{
-    ctx.Return(alt::ICore::Instance().GetNetTime());
-}
-
 static void SyncedMetaGetter(js::DynamicPropertyGetterContext& ctx)
 {
     ctx.Return(alt::ICore::Instance().GetSyncedMetaData(ctx.GetProperty()));
@@ -161,22 +156,29 @@ static void SetVoiceExternal(js::FunctionContext& ctx)
     alt::ICore::Instance().SetVoiceExternal(ip, port);
 }
 
+static void HasBenefit(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckArgCount(1)) return;
+
+    alt::Benefit benefit;
+    if(!ctx.GetArg(0, benefit)) return;
+
+    ctx.Return(alt::ICore::Instance().HasBenefit(benefit));
+}
+
 // clang-format off
-extern js::Class playerClass, vehicleClass, checkpointClass, pedClass, objectClass, voiceChannelClass, blipClass, virtualEntityClass, virtualEntityGroupClass, metricClass;
-extern js::Namespace eventsNamespace, pedModelInfoNamespace, vehicleModelInfoNamespace, weaponModelInfoNamespace;
-static js::Module altModule("@altv/server", "@altv/shared", { &playerClass, &vehicleClass, &checkpointClass, &pedClass, &objectClass, &voiceChannelClass, &blipClass, &virtualEntityClass, &virtualEntityGroupClass, &metricClass }, [](js::ModuleTemplate& module)
+extern js::Class playerClass, vehicleClass, checkpointClass, pedClass, objectClass, voiceChannelClass, blipClass, virtualEntityClass, virtualEntityGroupClass, markerClass, metricClass, connectionInfoClass;
+extern js::Namespace eventsNamespace, pedModelInfoNamespace, vehicleModelInfoNamespace, weaponModelInfoNamespace, streamingNamespace;
+static js::Module altModule("@altv/server", "@altv/shared", { &playerClass, &vehicleClass, &checkpointClass, &pedClass, &objectClass, &voiceChannelClass, &blipClass, &virtualEntityClass, &virtualEntityGroupClass, &markerClass, &metricClass, &connectionInfoClass }, [](js::ModuleTemplate& module)
 {
     module.StaticProperty("isClient", false);
     module.StaticProperty("isServer", true);
     module.StaticProperty("rootDir", alt::ICore::Instance().GetRootDirectory());
-    module.StaticProperty("defaultDimension", alt::DEFAULT_DIMENSION);
-    module.StaticProperty("globalDimension", alt::GLOBAL_DIMENSION);
 
     module.StaticDynamicProperty("syncedMeta", SyncedMetaGetter, SyncedMetaSetter, SyncedMetaDeleter, SyncedMetaEnumerator);
 
     module.StaticLazyProperty("serverConfig", GetServerConfig);
 
-    module.StaticFunction("getNetTime", GetNetTime);
     module.StaticFunction("setServerPassword", SetServerPassword);
     module.StaticFunction("hashServerPassword", HashServerPassword);
     module.StaticFunction("stopServer", StopServer);
@@ -187,8 +189,12 @@ static js::Module altModule("@altv/server", "@altv/shared", { &playerClass, &veh
     module.StaticFunction("setVoiceExternalPublic", SetVoiceExternalPublic);
     module.StaticFunction("setVoiceExternal", SetVoiceExternal);
 
+    module.StaticFunction("hasBenefit", HasBenefit);
+
+    module.Namespace("Security");
     module.Namespace(eventsNamespace);
     module.Namespace(pedModelInfoNamespace);
     module.Namespace(vehicleModelInfoNamespace);
     module.Namespace(weaponModelInfoNamespace);
-});
+    module.Namespace(streamingNamespace);
+}, nullptr, js::Module::Option::EXPORT_AS_DEFAULT);

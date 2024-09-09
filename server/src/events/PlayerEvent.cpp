@@ -19,9 +19,10 @@ static js::Event playerConnectDeniedEvent(alt::CEvent::Type::PLAYER_CONNECT_DENI
     args.Set("passwordHash", e->GetPasswordHash());
     args.Set("isDebug", e->IsDebug());
     args.Set("branch", e->GetBranch());
-    args.Set("version", e->GetMajorVersion());
+    args.Set("versionMajor", e->GetVersionMajor());
+    args.Set("versionMinor", e->GetVersionMinor());
     args.Set("cdnUrl", e->GetCdnUrl());
-    args.Set("discordId", e->GetDiscordId());
+    args.Set("discordID", e->GetDiscordId());
 });
 
 static js::Event playerDisconnectEvent(alt::CEvent::Type::PLAYER_DISCONNECT, [](const alt::CEvent* ev, js::Event::EventArgs& args)
@@ -50,6 +51,19 @@ static js::Event playerDeathEvent(alt::CEvent::Type::PLAYER_DEATH, [](const alt:
     args.Set("player", e->GetTarget());
     args.Set("killer", e->GetKiller());
     args.Set("weaponHash", e->GetWeapon());
+});
+
+static js::Event playerHealEvent(alt::CEvent::Type::PLAYER_HEAL, [](const alt::CEvent* ev, js::Event::EventArgs& args)
+{
+    auto e = static_cast<const alt::CPlayerHealEvent*>(ev);
+
+    args.Set("player", e->GetTarget());
+
+    args.Set("newHealth", e->GetNewHealth());
+    args.Set("oldHealth", e->GetOldHealth());
+
+    args.Set("newArmour", e->GetNewArmour());
+    args.Set("oldArmour", e->GetOldArmour());
 });
 
 static js::Event playerRequestControlEvent(alt::CEvent::Type::PLAYER_REQUEST_CONTROL, [](const alt::CEvent* ev, js::Event::EventArgs& args)
@@ -130,4 +144,11 @@ static js::Event updateSyncedSceneEvent(alt::CEvent::Type::UPDATE_SYNCED_SCENE, 
     args.Set("player", e->GetSource());
     args.Set("sceneID", e->GetSceneID());
     args.Set("startRate", e->GetStartRate());
+});
+
+static js::Event playerSpawnEvent(alt::CEvent::Type::PLAYER_SPAWN, [](const alt::CEvent* ev, js::Event::EventArgs& args)
+{
+    auto e = static_cast<const alt::CPlayerSpawnEvent*>(ev);
+
+    args.Set("player", e->GetPlayer());
 });

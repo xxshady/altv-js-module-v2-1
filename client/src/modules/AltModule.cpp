@@ -52,6 +52,11 @@ static void SetMsPerGameMinute(js::FunctionContext& ctx)
     alt::ICore::Instance().SetMsPerGameMinute(msPerGameMinute);
 }
 
+static void GetServerTime(js::FunctionContext& ctx)
+{
+    ctx.Return(alt::ICore::Instance().GetServerTime());
+}
+
 static void LicenseHashGetter(js::LazyPropertyContext& ctx)
 {
     ctx.Return(alt::ICore::Instance().GetLicenseHash());
@@ -205,7 +210,7 @@ static void TakeScreenshot(js::FunctionContext& ctx)
 {
     bool gameOnly = ctx.GetArg<bool>(0, false);
 
-    js::Promise* promise = new js::Promise;
+    js::Promise* promise = ctx.GetResource()->CreatePromise();
     js::IAltResource* resource = ctx.GetResource<js::IAltResource>();
 
     auto callback = [=](const std::string& base64Str)
@@ -428,26 +433,84 @@ static void GetPedBonePos(js::FunctionContext& ctx)
 
 static void LocalMetaGetter(js::DynamicPropertyGetterContext& ctx)
 {
-    if(!ctx.CheckParent()) return;
-
     alt::MValue val = alt::ICore::Instance().GetLocalMetaData(ctx.GetProperty());
     ctx.Return(val);
 }
 
+static void IsPointOnScreen(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckArgCount(1)) return;
+
+    alt::Vector3f point;
+    if(!ctx.GetArg(0, point)) return;
+
+    ctx.Return(alt::ICore::Instance().IsPointOnScreen(point));
+}
+
+static void GetPoolSize(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckArgCount(1)) return;
+
+    std::string pool;
+    if (!ctx.GetArg(0, pool)) return;
+
+    ctx.Return(alt::ICore::Instance().GetPoolSize(pool));
+}
+
+static void GetPoolCount(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckArgCount(1)) return;
+
+    std::string pool;
+    if (!ctx.GetArg(0, pool)) return;
+
+    ctx.Return(alt::ICore::Instance().GetPoolCount(pool));
+}
+
+static void GetPoolEntities(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckArgCount(1)) return;
+
+    std::string pool;
+    if (!ctx.GetArg(0, pool)) return;
+
+    auto entities = alt::ICore::Instance().GetPoolEntities(pool);
+
+    js::Array arr(entities.size());
+    for (auto entity : entities)
+    {
+        arr.Push(entity);
+    }
+
+    ctx.Return(arr);
+}
+
+static void UpdateClipContext(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckArgCount(1)) return;
+
+    std::unordered_map<std::string, std::string> context;
+    if (!ctx.GetArg(0, context)) return;
+
+    alt::ICore::Instance().UpdateClipContext(context);
+}
+
 // clang-format off
 extern js::Class playerClass, localPlayerClass, vehicleClass, pedClass, objectClass,
-                audioClass, audioFilterClass, blipClass, textLabelClass, checkpointClass, webViewClass, fontClass,
+                audioClass, audioFilterClass, blipClass, markerClass, textLabelClass, checkpointClass, webViewClass, fontClass,
                 localPedClass, localVehicleClass, rmlDocumentClass, rmlElementClass, localObjectClass, webSocketClientClass,
                 mapZoomDataClass, virtualEntityClass, virtualEntityGroupClass, weaponDataClass, handlingClass, handlingDataClass,
-                httpClientClass, audioOutputClass, audioOutputAttachedClass, audioOutputFrontendClass, audioOutputWorldClass, audioCategoryClass;
+                httpClientClass, audioOutputClass, audioOutputAttachedClass, audioOutputFrontendClass, audioOutputWorldClass, audioCategoryClass,
+                textEncoderClass, textDecoderClass;
 extern js::Namespace eventsNamespace, discordNamespace, voiceNamespace, localStorageNamespace, statsNamespace, focusDataNamespace,
                     gxtNamespace, cursorNamespace, camNamespace, streamingNamespace, configFlagNamespace;
+
 static js::Module altModule("@altv/client", "@altv/shared",
     { &playerClass, &localPlayerClass, &vehicleClass, &pedClass, &objectClass,
-    &audioClass, &audioFilterClass, &blipClass, &textLabelClass, &checkpointClass, &webViewClass, &fontClass,
+    &audioClass, &audioFilterClass, &blipClass, &markerClass, &textLabelClass, &checkpointClass, &webViewClass, &fontClass,
     &localPedClass, &localVehicleClass, &rmlDocumentClass, &rmlElementClass, &localObjectClass, &webSocketClientClass,
     &mapZoomDataClass, &virtualEntityClass, &virtualEntityGroupClass, &weaponDataClass, &handlingClass, &handlingDataClass,
-    &httpClientClass, &audioOutputClass, &audioOutputAttachedClass, &audioOutputFrontendClass, &audioOutputWorldClass, &audioCategoryClass },
+    &httpClientClass, &audioOutputClass, &audioOutputAttachedClass, &audioOutputFrontendClass, &audioOutputWorldClass, &audioCategoryClass, &textEncoderClass, &textDecoderClass },
 [](js::ModuleTemplate& module) {
     module.StaticProperty("isClient", true);
     module.StaticProperty("isServer", false);
@@ -473,6 +536,7 @@ static js::Module altModule("@altv/client", "@altv/shared",
     module.StaticFunction("setGameControlsActive", SetGameControlsActive);
     module.StaticFunction("getMsPerGameMinute", GetMsPerGameMinute);
     module.StaticFunction("setMsPerGameMinute", SetMsPerGameMinute);
+    module.StaticFunction("getServerTime", GetServerTime);
     module.StaticFunction("areRmlControlsActive", AreRmlControlsActive);
     module.StaticFunction("setRmlControlsActive", SetRmlControlsActive);
     module.StaticFunction("getKeyState", GetKeyState);
@@ -496,6 +560,13 @@ static js::Module altModule("@altv/client", "@altv/shared",
     module.StaticFunction("resetMinimapComponentPosition", ResetMinimapComponentPosition);
     module.StaticFunction("setMinimapIsRectangle", SetMinimapIsRectangle);
     module.StaticFunction("getPedBonePos", GetPedBonePos);
+    module.StaticFunction("isPointOnScreen", IsPointOnScreen);
+
+    module.StaticFunction("getPoolSize", GetPoolSize);
+    module.StaticFunction("getPoolCount", GetPoolCount);
+    module.StaticFunction("getPoolEntities", GetPoolEntities);
+
+    module.StaticFunction("updateClipContext", UpdateClipContext);
 
     module.Namespace(eventsNamespace);
     module.Namespace(discordNamespace);
@@ -509,6 +580,7 @@ static js::Module altModule("@altv/client", "@altv/shared",
     module.Namespace(streamingNamespace);
     module.Namespace(configFlagNamespace);
     module.Namespace("WeaponObject");
+    module.Namespace("Drawing");
 
     module.StaticDynamicProperty("localMeta", LocalMetaGetter);
-});
+}, nullptr, js::Module::Option::EXPORT_AS_DEFAULT);

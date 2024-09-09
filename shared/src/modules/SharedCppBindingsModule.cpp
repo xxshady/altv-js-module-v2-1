@@ -28,8 +28,6 @@ static void SetEntityFactory(js::FunctionContext& ctx)
     if(!ctx.GetArg(1, factory)) return;
 
     js::IResource* resource = ctx.GetResource();
-    if(!ctx.Check(!resource->HasCustomFactory(type), "Entity factory already set")) return;
-
     resource->SetCustomFactory(type, factory.As<v8::Function>());
 }
 
@@ -60,28 +58,36 @@ static void CreateEntity(js::FunctionContext& ctx)
     js::Object args;
     if(!ctx.GetArg(1, args)) return;
 
-    js::TryCatch tryCatch;
-    alt::IBaseObject* object = js::FactoryHandler::Create(type, args);
-    if(!object)
-    {
-        if(tryCatch.HasCaught()) tryCatch.ReThrow();
-        else
-            ctx.Throw("Failed to create entity of type " + std::string(magic_enum::enum_name(type)));
-        return;
-    }
-
     js::IResource* resource = ctx.GetResource();
-    js::ScriptObject* scriptObject = resource->GetOrCreateScriptObject(ctx.GetContext(), object);
-    if(!scriptObject)
+    js::ScriptObject* scriptObject = nullptr;
     {
-        if(tryCatch.HasCaught()) tryCatch.ReThrow();
-        else
-            ctx.Throw("Failed to create entity of type " + std::string(magic_enum::enum_name(type)));
-        return;
+        js::TryCatch tryCatch;
+        alt::IBaseObject* object = js::FactoryHandler::Create(type, args);
+
+        if (tryCatch.HasCaught())
+        {
+            tryCatch.ReThrow();
+            return;
+        }
+
+        if(!object)
+        {
+            if(!tryCatch.HasCaught()) ctx.Throw("Failed to create entity of type " + std::string(magic_enum::enum_name(type)));
+            tryCatch.ReThrow();
+            return;
+        }
+
+        scriptObject = resource->GetOrCreateScriptObject(resource->GetContext(), object);
+        if(!scriptObject)
+        {
+            if(!tryCatch.HasCaught()) ctx.Throw("Failed to create entity of type " + std::string(magic_enum::enum_name(type)));
+            tryCatch.ReThrow();
+            return;
+        }
     }
 
-    js::Function func = resource->GetBindingExport<v8::Function>("entity:addEntityToAll");
-    if(!ctx.Check(func.IsValid(), "INTERNAL ERROR: Failed to get entity:addEntityToAll function")) return;
+    js::Function func = resource->GetBindingExport<v8::Function>(js::BindingExport::ADD_ENTITY_TO_ALL);
+    if(!ctx.Check(func.IsValid(), "INTERNAL ERROR: Failed to get addEntityToAll function")) return;
     func.Call(scriptObject->Get());
 
     ctx.Return(scriptObject->Get());
@@ -89,16 +95,26 @@ static void CreateEntity(js::FunctionContext& ctx)
 
 static void GetAllEntities(js::FunctionContext& ctx)
 {
-    js::IResource* resource = ctx.GetResource();
     std::vector<alt::IEntity*> entities = alt::ICore::Instance().GetEntities();
-    js::Array entitiesArr;
-    for(auto& object : entities)
+
+    for (auto& entity : entities)
     {
-        js::ScriptObject* scriptObject = resource->GetOrCreateScriptObject(ctx.GetContext(), object);
-        if(!scriptObject) continue;
-        entitiesArr.Push(scriptObject->Get());
+        ctx.GetResource()->GetScriptObject(entity);
     }
+
     ctx.Return(entities);
+}
+
+static void GetAllVirtualEntities(js::FunctionContext& ctx)
+{
+    std::vector<alt::IBaseObject*> virtualEntities = alt::ICore::Instance().GetBaseObjects(alt::IBaseObject::Type::VIRTUAL_ENTITY);
+
+    for (auto& entity : virtualEntities)
+    {
+        ctx.GetResource()->GetScriptObject(entity);
+    }
+
+    ctx.Return(virtualEntities);
 }
 
 static void GetCurrentSourceLocation(js::FunctionContext& ctx)
@@ -117,21 +133,54 @@ static void RegisterExport(js::FunctionContext& ctx)
 {
     if(!ctx.CheckArgCount(2)) return;
 
-    std::string name;
-    if(!ctx.GetArg(0, name)) return;
+    js::BindingExport export_;
+    if(!ctx.GetArg(0, export_)) return;
 
     v8::Local<v8::Value> value;
     if(!ctx.GetArg(1, value)) return;
 
     js::IResource* resource = ctx.GetResource();
-    if(!ctx.Check(!resource->HasBindingExport(name), "Export already registered")) return;
+    if(!ctx.Check(!resource->HasBindingExport(export_), "Binding export already registered")) return;
 
-    resource->SetBindingExport(name, value);
+    resource->SetBindingExport(export_, value);
+}
+
+static void GetBuiltinModule(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckArgCount(1)) return;
+    js::IResource* resource = ctx.GetResource();
+
+    std::string name;
+    if(!ctx.GetArg(0, name)) return;
+
+    if(!js::Module::Exists(name))
+    {
+        ctx.Return(nullptr);
+        return;
+    }
+    js::Module& mod = js::Module::Get(name);
+    if(mod.HasOption(js::Module::Option::COMPATIBILITY_MODULE) && !resource->IsCompatibilityModeEnabled())
+    {
+        ctx.Return(nullptr);
+        return;
+    }
+    ctx.Return(mod.GetNamespace(resource));
 }
 
 static void ResourceNameGetter(js::LazyPropertyContext& ctx)
 {
     ctx.Return(ctx.GetResource()->GetResource()->GetName());
+}
+
+static void BindingExportGetter(js::LazyPropertyContext& ctx)
+{
+    js::Object obj;
+    auto values = magic_enum::enum_entries<js::BindingExport>();
+    for(auto& [value, key] : values)
+    {
+        obj.Set(key.data(), (int)value);
+    }
+    ctx.Return(obj);
 }
 
 // clang-format off
@@ -144,9 +193,15 @@ extern js::Module sharedCppBindingsModule("sharedCppBindings", [](js::ModuleTemp
 
     module.StaticFunction("createEntity", CreateEntity);
     module.StaticFunction("getAllEntities", GetAllEntities);
+    module.StaticFunction("getAllVirtualEntities", GetAllVirtualEntities);
     module.StaticFunction("getCurrentSourceLocation", GetCurrentSourceLocation);
 
     module.StaticFunction("registerExport", RegisterExport);
+    module.StaticFunction("registerCompatibilityExport", js::ICompatibilityHandler::RegisterCompatibilityExportFunc);
+
+    module.StaticFunction("getBuiltinModule", GetBuiltinModule);
 
     module.StaticLazyProperty("resourceName", ResourceNameGetter);
+
+    module.StaticEnum<js::BindingExport>("BindingExport");
 });

@@ -2,8 +2,6 @@
 
 #include "IResource.h"
 
-#include <queue>
-
 namespace js
 {
     class IAltResource : public alt::IResource::Impl, public IResource
@@ -22,21 +20,16 @@ namespace js
             static void ExternalFunctionCallback(const v8::FunctionCallbackInfo<v8::Value>& info);
         };
 
-        using NextTickCallback = std::function<void()>;
-
     protected:
         alt::IResource* resource = nullptr;
 
         std::unordered_map<alt::IResource*, Persistent<v8::Object>> resourceObjects;
-
-        std::queue<NextTickCallback> nextTickCallbacks;
 
         void Reset() override
         {
             IResource::Reset();
             resource = nullptr;
             resourceObjects.clear();
-            nextTickCallbacks = {};
         }
 
     public:
@@ -61,7 +54,10 @@ namespace js
 
         void OnCreateBaseObject(alt::IBaseObject* object) override
         {
-            // IScriptObjectHandler::GetOrCreateScriptObject(GetContext(), object);
+            if(context.IsEmpty()) return;
+            IResource::Scope scope(this);
+
+            IScriptObjectHandler::GetOrCreateScriptObject(GetContext(), object);
         }
 
         void OnRemoveBaseObject(alt::IBaseObject* object) override
@@ -77,21 +73,15 @@ namespace js
             if(context.IsEmpty()) return;
             IResource::Scope scope(this);
 
-            if(ev->GetType() == alt::CEvent::Type::RESOURCE_STOP) DestroyResourceObject(static_cast<const alt::CResourceStopEvent*>(ev)->GetResource());
+            if (ev->GetType() == alt::CEvent::Type::RESOURCE_STOP) DestroyResourceObject(static_cast<const alt::CResourceStopEvent*>(ev)->GetResource());
 
             Event::SendEvent(ev, this);
         }
 
         void OnTick() override
         {
-            while(!nextTickCallbacks.empty())
-            {
-                NextTickCallback& callback = nextTickCallbacks.front();
-                callback();
-                nextTickCallbacks.pop();
-            }
-
-            js::Function onTick = GetBindingExport<v8::Function>("timers:tick");
+            IResource::ProcessNextTickCallbacks();
+            js::Function onTick = GetBindingExport<v8::Function>(BindingExport::TICK);
             if(onTick.IsValid()) onTick.Call();
         }
 
@@ -101,11 +91,6 @@ namespace js
             if(!resourceObjects.contains(resource)) return;
             resourceObjects.at(resource).Get(isolate)->SetAlignedPointerInInternalField(1, nullptr);
             resourceObjects.erase(resource);
-        }
-
-        void PushNextTickCallback(NextTickCallback&& callback)
-        {
-            nextTickCallbacks.push(std::move(callback));
         }
     };
 }  // namespace js

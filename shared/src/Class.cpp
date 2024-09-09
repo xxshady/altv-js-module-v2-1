@@ -15,6 +15,7 @@ void js::Class::Register(v8::Isolate* isolate)
         tpl.Inherit(parentClass->templateMap.at(isolate));
     }
     initCb(tpl);
+    tpl.RegisterStaticMethods();
     tpl.Get()->SetClassName(js::JSValue(name));
     tpl.Get()->InstanceTemplate()->SetInternalFieldCount(internalFieldCount);
     templateMap.insert({ isolate, tpl });
@@ -31,14 +32,7 @@ js::Class* js::Class::GetByClassId(uint16_t id)
 
 void js::Class::Initialize(v8::Isolate* isolate)
 {
-    for(auto class_ : GetAll())
-    {
-        class_->Register(isolate);
-#ifdef DEBUG_BINDINGS
-        class_->GetTemplate(isolate).DumpRegisteredKeys();
-        Logger::Colored("~g~[BINDINGS] ~w~Dumped class", class_->GetName());
-#endif
-    }
+    for(auto class_ : GetAll()) class_->Register(isolate);
 
     // Only needed while setting up the templates, so we can free the data here
     ClassTemplate::CleanupPropertyGetterMap(isolate);
@@ -46,9 +40,6 @@ void js::Class::Initialize(v8::Isolate* isolate)
 
 void js::Class::Cleanup(v8::Isolate* isolate)
 {
-    for(auto class_ : GetAll())
-    {
-        class_->templateMap.erase(isolate);
-    }
+    for(auto class_ : GetAll()) class_->templateMap.erase(isolate);
     ClassTemplate::CleanupDynamicPropertyData(isolate);
 }

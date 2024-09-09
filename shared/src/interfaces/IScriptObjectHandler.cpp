@@ -30,22 +30,30 @@ js::ScriptObject* js::IScriptObjectHandler::GetOrCreateScriptObject(v8::Local<v8
         return nullptr;
     }
 
-    objectMap.insert({ object->GetType(), scriptObject });
+    js::Object scriptObjectObj = scriptObject->Get();
+    if(scriptObjectObj.GetType("onCreate") == js::Type::FUNCTION)
+    {
+        js::Function onCreateFunc = scriptObjectObj.Get<v8::Local<v8::Value>>("onCreate").As<v8::Function>();
+        onCreateFunc.Call(scriptObjectObj);
+    }
+
+    objectMap.insert({ object, scriptObject });
     return scriptObject;
 }
 
 void js::IScriptObjectHandler::DestroyScriptObject(alt::IBaseObject* object)
 {
-    auto range = objectMap.equal_range(object->GetType());
-    for(auto it = range.first; it != range.second; ++it)
-    {
-        if(it->second->GetObject() == object)
-        {
-            objectMap.erase(it);
-            ScriptObject::Destroy(it->second);
-            break;
-        }
-    }
+    auto it = objectMap.find(object);
+    if(it == objectMap.end()) return;
+    ScriptObject::Destroy(it->second);
+    objectMap.erase(it);
+}
+
+js::ScriptObject* js::IScriptObjectHandler::GetScriptObject(alt::IBaseObject* object)
+{
+    auto it = objectMap.find(object);
+    if(it == objectMap.end()) return nullptr;
+    return it->second;
 }
 
 void js::IScriptObjectHandler::BindClassToType(alt::IBaseObject::Type type, Class* class_)

@@ -1,4 +1,5 @@
 #include "Class.h"
+#include "interfaces/IResource.h"
 
 static void ChildrenGetter(js::PropertyContext& ctx)
 {
@@ -85,7 +86,6 @@ extern js::Class rmlElementClass("RmlElement", &baseObjectClass, nullptr, [](js:
     tpl.Property<&alt::IRmlElement::GetFirstChild>("firstChild");
     tpl.Property<&alt::IRmlElement::GetLastChild>("lastChild");
     tpl.Property<&alt::IRmlElement::GetChildCount>("childCount");
-    tpl.Property<&alt::IRmlElement::HasChildren>("hasChildren");
     tpl.Property<&alt::IRmlElement::GetInnerRML, &alt::IRmlElement::SetInnerRML>("innerRML");
     tpl.Property<&alt::IRmlElement::HasChildren>("hasChildren");
     tpl.Property("childNodes", ChildrenGetter);

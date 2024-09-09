@@ -22,7 +22,8 @@ template<auto Method, bool HasBody, bool HasProgressCallback = false>
 static void GenericRequest(js::FunctionContext& ctx)
 {
     if(!ctx.CheckThis()) return;
-    if(!ctx.CheckArgCount(1)) return;
+    if(!ctx.CheckArgCount(1, 2)) return;
+
     alt::IHttpClient* client = ctx.GetThisObject<alt::IHttpClient>();
 
     std::string url;
@@ -34,7 +35,7 @@ static void GenericRequest(js::FunctionContext& ctx)
         if(!ctx.GetArg(1, body)) return;
     }
 
-    js::Promise* promise = new js::Promise;
+    js::Promise* promise = ctx.GetResource()->CreatePromise();
     if constexpr(HasBody) (client->*Method)(ResponseCallback, url, body, (void*)promise);
     else if constexpr(HasProgressCallback)
         (client->*Method)(ResponseCallback, url, (void*)promise, nullptr);
@@ -80,7 +81,8 @@ static void ExtraHeadersEnumerator(js::DynamicPropertyEnumeratorContext& ctx)
 }
 
 // clang-format off
-extern js::Class httpClientClass("HttpClient", [](js::ClassTemplate& tpl)
+extern js::Class baseObjectClass;
+extern js::Class httpClientClass("HttpClient", &baseObjectClass, [](js::ClassTemplate& tpl)
 {
     tpl.BindToType(alt::IBaseObject::Type::HTTP_CLIENT);
 

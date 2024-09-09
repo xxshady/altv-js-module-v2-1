@@ -9,7 +9,7 @@ v8::Local<v8::Value> js::JSValue(alt::IBaseObject* object)
     if(!object) return v8::Null(isolate);
     IResource* resource = GetCurrentResource(isolate);
     if(!resource) return v8::Null(isolate);
-    ScriptObject* scriptObject = resource->GetOrCreateScriptObject(resource->GetContext(), object);
+    ScriptObject* scriptObject = resource->GetScriptObject(object);
     if(!scriptObject) return v8::Null(isolate);
     return scriptObject->Get();
 }
@@ -66,6 +66,16 @@ v8::Local<v8::Value> js::JSValue(const js::Object& jsObj)
 v8::Local<v8::Value> js::JSValue(const js::Array& jsArr)
 {
     return jsArr.Get();
+}
+
+v8::Local<v8::Value> js::JSValue(const js::Promise& jsPromise)
+{
+    return jsPromise.Get();
+}
+
+v8::Local<v8::Value> js::JSValue(js::Promise* jsPromise)
+{
+    return jsPromise->Get();
 }
 
 alt::MValue js::JSToMValue(v8::Local<v8::Value> val, bool allowFunction)
@@ -126,7 +136,6 @@ alt::MValue js::JSToMValue(v8::Local<v8::Value> val, bool allowFunction)
         else if(val->IsTypedArray())
         {
             v8::Local<v8::TypedArray> typedArray = val.As<v8::TypedArray>();
-            if(!typedArray->HasBuffer()) return core.CreateMValueNone();
             v8::Local<v8::ArrayBuffer> v8Buffer = typedArray->Buffer();
             return core.CreateMValueByteArray((uint8_t*)((uintptr_t)v8Buffer->GetBackingStore()->Data() + typedArray->ByteOffset()), typedArray->ByteLength());
         }
@@ -147,6 +156,11 @@ alt::MValue js::JSToMValue(v8::Local<v8::Value> val, bool allowFunction)
             }
             return dict;
         }
+        else if(val->IsProxy())
+        {
+            v8::Local<v8::Value> proxyValue = val.As<v8::Proxy>()->GetTarget();
+            return JSToMValue(proxyValue, allowFunction);
+        }
         else
         {
             js::IResource* resource = js::IResource::GetFromContext(ctx);
@@ -155,35 +169,48 @@ alt::MValue js::JSToMValue(v8::Local<v8::Value> val, bool allowFunction)
             if(resource->IsVector3(v8Obj))
             {
                 alt::Vector3f vec;
-                vec[0] = obj.Get<float>("x");
-                vec[1] = obj.Get<float>("y");
-                vec[2] = obj.Get<float>("z");
+                vec[0] = obj.Get<float, true>("x");
+                vec[1] = obj.Get<float, true>("y");
+                vec[2] = obj.Get<float, true>("z");
                 return core.CreateMValueVector3(vec);
             }
             else if(resource->IsVector2(v8Obj))
             {
                 alt::Vector2f vec;
-                vec[0] = obj.Get<float>("x");
-                vec[1] = obj.Get<float>("y");
+                vec[0] = obj.Get<float, true>("x");
+                vec[1] = obj.Get<float, true>("y");
                 return core.CreateMValueVector2(vec);
             }
             else if(resource->IsRGBA(v8Obj))
             {
                 alt::RGBA rgba;
-                rgba.r = obj.Get<uint8_t>("r");
-                rgba.g = obj.Get<uint8_t>("g");
-                rgba.b = obj.Get<uint8_t>("b");
-                rgba.a = obj.Get<uint8_t>("a");
+                rgba.r = obj.Get<uint8_t, true>("r");
+                rgba.g = obj.Get<uint8_t, true>("g");
+                rgba.b = obj.Get<uint8_t, true>("b");
+                rgba.a = obj.Get<uint8_t, true>("a");
                 return core.CreateMValueRGBA(rgba);
             }
             else if(resource->IsBaseObject(v8Obj))
             {
                 ScriptObject* scriptObject = resource->GetScriptObject(obj.Get());
-                if(scriptObject == nullptr) return core.CreateMValueNone();
+                if(scriptObject == nullptr)
+                {
+                    js::Throw("Failed to serialize invalid base object (object is probably destroyed or is not in streaming range)");
+                    return core.CreateMValueNone();
+                }
+
                 return core.CreateMValueBaseObject(scriptObject->GetObject());
             }
             else
             {
+                v8::Local<v8::Value> serialize = obj.GetSymbol<v8::Local<v8::Value>>(Symbol::SERIALIZE);
+                if(!serialize.IsEmpty() && serialize->IsFunction())
+                {
+                    js::Function serializeFunc = serialize.As<v8::Function>();
+                    std::optional<v8::Local<v8::Value>> resultVal = serializeFunc.Call<v8::Local<v8::Value>>(obj);
+                    if(resultVal.has_value()) return JSToMValue(resultVal.value());
+                }
+
                 alt::MValueDict dict = core.CreateMValueDict();
                 auto keys = obj.GetKeys();
                 for(auto& key : keys)
@@ -206,6 +233,12 @@ v8::Local<v8::Value> js::MValueToJS(alt::MValueConst val)
     v8::Isolate* isolate = v8::Isolate::GetCurrent();
     v8::Local<v8::Context> ctx = isolate->GetEnteredOrMicrotaskContext();
     js::IResource* resource = js::IResource::GetFromContext(ctx);
+
+    if (!val)
+    {
+        js::Throw("js::MValueToJS: val is nullptr - please forward to module maintainer");
+        return v8::Undefined(isolate);
+    }
 
     switch(val->GetType())
     {
@@ -247,7 +280,7 @@ v8::Local<v8::Value> js::MValueToJS(alt::MValueConst val)
         case alt::IMValue::Type::BASE_OBJECT:
         {
             alt::IBaseObject* ref = std::dynamic_pointer_cast<const alt::IMValueBaseObject>(val)->RawValue();
-            return resource->GetOrCreateScriptObject(ctx, ref)->Get();
+            return resource->GetScriptObject(ref)->Get();
         }
         case alt::IMValue::Type::FUNCTION:
         {
@@ -355,7 +388,7 @@ v8::MaybeLocal<v8::Value> js::RawBytesToJS(alt::MValueByteArrayConst val, IResou
     return result.value();
 }
 
-std::optional<alt::IBaseObject*> js::ToBaseObject(v8::Local<v8::Value> val)
+std::optional<alt::IBaseObject*> js::internal::ToBaseObject(v8::Local<v8::Value> val)
 {
     IResource* resource = GetCurrentResource();
     ScriptObject* scriptObject = resource->GetScriptObject(val);

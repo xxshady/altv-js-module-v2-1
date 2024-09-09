@@ -1,5 +1,4 @@
 #include "Class.h"
-#include "cpp-sdk/ICore.h"
 
 static void NeonGetter(js::DynamicPropertyGetterContext& ctx)
 {
@@ -21,6 +20,24 @@ static void NeonGetter(js::DynamicPropertyGetterContext& ctx)
     ctx.Return(val);
 }
 
+static void GetNeonActive(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckThis()) return;
+
+    alt::IVehicle* vehicle = ctx.GetThisObject<alt::IVehicle>();
+
+    bool left, right, front, back;
+    vehicle->GetNeonActive(&left, &right, &front, &back);
+
+    js::Object neonStates;
+    neonStates.Set("left", left);
+    neonStates.Set("right", right);
+    neonStates.Set("front", front);
+    neonStates.Set("back", back);
+
+    ctx.Return(neonStates);
+}
+
 static void NeonEnumerator(js::DynamicPropertyEnumeratorContext& ctx)
 {
     js::Array arr(4);
@@ -36,6 +53,7 @@ extern js::Class entityClass;
 extern js::Class sharedVehicleClass("SharedVehicle", &entityClass, nullptr, [](js::ClassTemplate& tpl)
 {
     tpl.DynamicProperty("neon", &NeonGetter, nullptr, nullptr, &NeonEnumerator);
+    tpl.Method("getNeonActive", &GetNeonActive);
 
     tpl.Property<&alt::IVehicle::GetDriver>("driver");
     tpl.Property<&alt::IVehicle::IsDestroyed>("isDestroyed");
@@ -66,7 +84,7 @@ extern js::Class sharedVehicleClass("SharedVehicle", &entityClass, nullptr, [](j
     tpl.Property<&alt::IVehicle::GetLivery>("livery");
     tpl.Property<&alt::IVehicle::GetRoofLivery>("roofLivery");
     tpl.Property<&alt::IVehicle::GetAppearanceDataBase64>("appearanceDataBase64");
-    tpl.Property<&alt::IVehicle::IsEngineOn>("isEngineOn");
+    tpl.Property<&alt::IVehicle::IsEngineOn>("engineOn");
     tpl.Property<&alt::IVehicle::IsHandbrakeActive>("isHandbrakeActive");
     tpl.Property<&alt::IVehicle::GetHeadlightColor>("headlightColor");
     tpl.Property<&alt::IVehicle::GetRadioStationIndex>("radioStationIndex");
@@ -86,10 +104,12 @@ extern js::Class sharedVehicleClass("SharedVehicle", &entityClass, nullptr, [](j
     tpl.Property<&alt::IVehicle::GetBodyAdditionalHealth>("bodyAdditionalHealth");
     tpl.Property<&alt::IVehicle::HasArmoredWindows>("hasArmoredWindows");
     tpl.Property<&alt::IVehicle::GetDamageDataBase64>("damageDataBase64");
-    tpl.Property<&alt::IVehicle::IsManualEngineControl>("isManualEngineControl");
+    tpl.Property<&alt::IVehicle::IsManualEngineControl>("manualEngineControl");
     tpl.Property<&alt::IVehicle::GetScriptDataBase64>("scriptDataBase64");
+    tpl.Property<&alt::IVehicle::GetHealthDataBase64>("healthDataBase64");
     tpl.Property<&alt::IVehicle::GetVelocity>("velocity");
     tpl.Property<&alt::IVehicle::GetSteeringAngle>("steeringAngle");
+    tpl.Property<&alt::IVehicle::GetRearWheelVariation>("rearWheelVariation");
 
     tpl.Method<&alt::IVehicle::GetMod>("getMod");
     tpl.Method<&alt::IVehicle::GetModsCount>("getModsCount");

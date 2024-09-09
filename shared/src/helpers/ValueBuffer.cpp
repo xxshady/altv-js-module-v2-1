@@ -128,7 +128,7 @@ bool js::ValueSerializer::Entity(v8::Local<v8::Value>& value)
 bool js::ValueSerializer::Vector3(v8::Local<v8::Value>& value)
 {
     js::Object obj = value.As<v8::Object>();
-    alt::Vector3f vector{ obj.Get<float>("x"), obj.Get<float>("y"), obj.Get<float>("z") };
+    alt::Vector3f vector{ obj.Get<float, true>("x"), obj.Get<float, true>("y"), obj.Get<float, true>("z") };
 
     Float(vector[0]);
     Float(vector[1]);
@@ -139,7 +139,7 @@ bool js::ValueSerializer::Vector3(v8::Local<v8::Value>& value)
 bool js::ValueSerializer::Vector2(v8::Local<v8::Value>& value)
 {
     js::Object obj = value.As<v8::Object>();
-    alt::Vector2f vector{ obj.Get<float>("x"), obj.Get<float>("y") };
+    alt::Vector2f vector{ obj.Get<float, true>("x"), obj.Get<float, true>("y") };
 
     Float(vector[0]);
     Float(vector[1]);
@@ -149,7 +149,7 @@ bool js::ValueSerializer::Vector2(v8::Local<v8::Value>& value)
 bool js::ValueSerializer::RGBA(v8::Local<v8::Value>& value)
 {
     js::Object obj = value.As<v8::Object>();
-    alt::RGBA rgba{ obj.Get<uint8_t>("r"), obj.Get<uint8_t>("g"), obj.Get<uint8_t>("b"), obj.Get<uint8_t>("a") };
+    alt::RGBA rgba{ obj.Get<uint8_t, true>("r"), obj.Get<uint8_t, true>("g"), obj.Get<uint8_t, true>("b"), obj.Get<uint8_t, true>("a") };
 
     Byte(rgba.r);
     Byte(rgba.g);
@@ -161,7 +161,7 @@ bool js::ValueSerializer::RGBA(v8::Local<v8::Value>& value)
 bool js::ValueSerializer::Quaternion(v8::Local<v8::Value>& value)
 {
     js::Object obj = value.As<v8::Object>();
-    alt::Quaternion quaternion{ obj.Get<float>("x"), obj.Get<float>("y"), obj.Get<float>("z"), obj.Get<float>("w") };
+    alt::Quaternion quaternion{ obj.Get<float, true>("x"), obj.Get<float, true>("y"), obj.Get<float, true>("z"), obj.Get<float, true>("w") };
 
     Float(quaternion.x);
     Float(quaternion.y);
@@ -230,8 +230,8 @@ std::optional<std::pair<uint8_t*, size_t>> js::ValueSerializer::Serialize(v8::Lo
     writer.resource = resource;
     writer.serializer = &serializer;
 
-    writer.serializer->WriteHeader();
     writer.Magic();
+    writer.serializer->WriteHeader();
     bool result = writer.Value(value);
     if(!result) return std::nullopt;
 
@@ -329,7 +329,7 @@ bool js::ValueDeserializer::Entity(v8::Local<v8::Value>& value)
 #endif
 
     if(!entity) return false;
-    value = resource->GetOrCreateScriptObject(resource->GetContext(), entity)->Get();
+    value = resource->GetScriptObject(entity)->Get();
     return true;
 }
 
@@ -409,8 +409,8 @@ std::optional<v8::Local<v8::Value>> js::ValueDeserializer::Deserialize(uint8_t* 
     reader.resource = resource;
     reader.deserializer = &deserializer;
 
-    if(!reader.deserializer->ReadHeader(resource->GetContext()).FromMaybe(false)) return std::nullopt;
     if(!reader.Magic()) return std::nullopt;
+    if(!reader.deserializer->ReadHeader(resource->GetContext()).FromMaybe(false)) return std::nullopt;
     v8::Local<v8::Value> value;
     bool result = reader.Value(value);
     if(!result) return std::nullopt;

@@ -1,6 +1,7 @@
 #include "Module.h"
 #include "Namespace.h"
 #include "interfaces/IResource.h"
+#include "cpp-sdk/version/version.h"
 
 enum class LogType
 {
@@ -13,7 +14,7 @@ template<LogType Type>
 static void Log(js::FunctionContext& ctx)
 {
     js::IResource* resource = ctx.GetResource();
-    js::Function inspectFunc(resource->GetBindingExport<v8::Function>("logging:inspectMultiple"));
+    js::Function inspectFunc(resource->GetBindingExport<v8::Function>(js::BindingExport::LOG_INSPECT));
 
     std::vector<v8::Local<v8::Value>> args;
     args.reserve(ctx.GetArgCount() + 1);
@@ -30,11 +31,11 @@ static void Log(js::FunctionContext& ctx)
 
     auto msg = inspectFunc.Call<std::string>(args);
     if(!msg) return;
-    if constexpr(Type == LogType::INFO) alt::ICore::Instance().LogColored(msg.value(), resource->GetResource());
+    if constexpr(Type == LogType::INFO) alt::ICore::Instance().LogColored(js::Logger::PREFIX, msg.value(), resource->GetResource());
     else if constexpr(Type == LogType::WARN)
-        alt::ICore::Instance().LogWarning(msg.value(), resource->GetResource());
+        alt::ICore::Instance().LogWarning(js::Logger::PREFIX, msg.value(), resource->GetResource());
     else if constexpr(Type == LogType::ERR)
-        alt::ICore::Instance().LogError(msg.value(), resource->GetResource());
+        alt::ICore::Instance().LogError(js::Logger::PREFIX, msg.value(), resource->GetResource());
 }
 
 static void SHA256(js::FunctionContext& ctx)
@@ -50,6 +51,11 @@ static void SHA256(js::FunctionContext& ctx)
 static void GetVoiceConnectionState(js::FunctionContext& ctx)
 {
     ctx.Return(alt::ICore::Instance().GetVoiceConnectionState());
+}
+
+static void GetNetTime(js::FunctionContext& ctx)
+{
+    ctx.Return(alt::ICore::Instance().GetNetTime());
 }
 
 static void MetaGetter(js::DynamicPropertyGetterContext& ctx)
@@ -81,13 +87,30 @@ static void MetaEnumerator(js::DynamicPropertyEnumeratorContext& ctx)
     ctx.Return(alt::ICore::Instance().GetMetaDataKeys());
 }
 
+static void SyncedMetaGetter(js::DynamicPropertyGetterContext& ctx)
+{
+    ctx.Return(alt::ICore::Instance().GetSyncedMetaData(ctx.GetProperty()));
+}
+
+static void SyncedMetaEnumerator(js::DynamicPropertyEnumeratorContext& ctx)
+{
+    ctx.Return(alt::ICore::Instance().GetSyncedMetaDataKeys());
+}
+
 // clang-format off
-extern js::Class baseObjectClass, worldObjectClass, entityClass, colShapeClass, resourceClass, bufferClass;
-extern js::Namespace enumsNamespace, sharedEventsNamespace, fileNamespace;
+extern js::Class baseObjectClass, worldObjectClass, entityClass, resourceClass, bufferClass;
+// TODO (xLuxy): bind colshape classes except colShapeClass
+extern js::Class colShapeClass, colShapeCircleClass, colShapeCuboidClass, colShapeCylinderClass, colShapePolyClass, colShapeRectClass, colShapeSphereClass;
+extern js::Namespace enumsNamespace, sharedEventsNamespace, fileNamespace, profilerNamespace, symbolsNamespace;
+
 static js::Module sharedModule("@altv/shared", "", { &baseObjectClass, &worldObjectClass, &entityClass, &colShapeClass, &resourceClass, &bufferClass }, [](js::ModuleTemplate& module)
 {
+    module.StaticProperty("defaultDimension", alt::DEFAULT_DIMENSION);
+    module.StaticProperty("globalDimension", alt::GLOBAL_DIMENSION);
+
     module.StaticProperty("isDebug", alt::ICore::Instance().IsDebug());
     module.StaticProperty("version", alt::ICore::Instance().GetVersion());
+    module.StaticProperty("sdkVersion", ALT_SDK_VERSION);
     module.StaticProperty("branch", alt::ICore::Instance().GetBranch());
 
     module.StaticFunction("log", Log<LogType::INFO>);
@@ -95,15 +118,19 @@ static js::Module sharedModule("@altv/shared", "", { &baseObjectClass, &worldObj
     module.StaticFunction("logError", Log<LogType::ERR>);
     module.StaticFunction("sha256", &SHA256);
     module.StaticFunction("getVoiceConnectionState", GetVoiceConnectionState);
+    module.StaticFunction("getNetTime", GetNetTime);
 
     module.StaticDynamicProperty("meta", MetaGetter, MetaSetter, MetaDeleter, MetaEnumerator);
+    module.StaticDynamicProperty("syncedMeta", SyncedMetaGetter, nullptr, nullptr, SyncedMetaEnumerator);
 
     module.Namespace("Timers");
     module.Namespace("Utils");
-    module.Namespace("Factory");
     module.Namespace("Commands");
+    module.Namespace("RPC");
     module.Namespace(enumsNamespace);
     module.Namespace(fileNamespace);
+    module.Namespace(profilerNamespace);
+    module.Namespace(symbolsNamespace);
     // Blip namespaces
     module.Namespace("PointBlip");
     module.Namespace("AreaBlip");
@@ -116,9 +143,16 @@ static js::Module sharedModule("@altv/shared", "", { &baseObjectClass, &worldObj
     module.Namespace("ColShapeRectangle");
     module.Namespace("ColShapePolygon");
 
-    module.StaticBindingExport("hash", "utils:hash");
-    module.StaticBindingExport("Vector3", "classes:vector3");
-    module.StaticBindingExport("Vector2", "classes:vector2");
-    module.StaticBindingExport("RGBA", "classes:rgba");
-    module.StaticBindingExport("Quaternion", "classes:quaternion");
-});
+    module.StaticBindingExport("hash", js::BindingExport::HASH);
+    module.StaticBindingExport("Vector3", js::BindingExport::VECTOR3_CLASS);
+    module.StaticBindingExport("Vector2", js::BindingExport::VECTOR2_CLASS);
+    module.StaticBindingExport("RGBA", js::BindingExport::RGBA_CLASS);
+    module.StaticBindingExport("Quaternion", js::BindingExport::QUATERNION_CLASS);
+}, [](js::IResource* resource) {
+    #ifdef ALT_SERVER_API
+    std::string name = "@altv/server";
+    #else
+    std::string name = "@altv/client";
+    #endif
+    return js::Module::Get(name).GetNamespace(resource);
+}, js::Module::Option::EXPORT_AS_DEFAULT);

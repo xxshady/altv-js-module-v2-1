@@ -4,6 +4,11 @@
 #include <filesystem>
 #include <sstream>
 
+void js::internal::RunEventLoop()
+{
+    GetCurrentResource()->RunEventLoop();
+}
+
 static std::string PrettifyFilePath(js::IResource* resource, std::string path)
 {
     if(path.starts_with("file:///")) path = path.substr(8);
@@ -30,8 +35,13 @@ js::SourceLocation js::SourceLocation::GetCurrent(IResource* resource, int frame
     {
         v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(isolate, i);
         if(!frame->IsUserJavaScript()) continue;
-        std::string scriptName = CppValue(frame->GetScriptName());
+
+        auto localScriptName = frame->GetScriptName();
+        if(localScriptName.IsEmpty()) continue;
+
+        std::string scriptName = CppValue(localScriptName);
         if(scriptName.empty() || scriptName.starts_with("internal:")) continue;
+
         return SourceLocation{ PrettifyFilePath(resource, scriptName), frame->GetLineNumber() };
     }
     return SourceLocation{};
@@ -62,8 +72,16 @@ js::StackTrace js::StackTrace::GetCurrent(v8::Isolate* isolate, IResource* resou
     for(int i = framesToSkip; i < stackTrace->GetFrameCount(); i++)
     {
         v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(isolate, i);
+        if(!frame->IsUserJavaScript()) continue;
+
+        auto localScriptName = frame->GetScriptName();
+        if(localScriptName.IsEmpty()) continue;
+
+        std::string scriptName = CppValue(localScriptName);
+
         Frame frameData;
-        frameData.file = PrettifyFilePath(resource, CppValue(frame->GetScriptName()));
+
+        frameData.file = PrettifyFilePath(resource, scriptName);
         frameData.line = frame->GetLineNumber();
         if(frame->GetFunctionName().IsEmpty()) frameData.function = "[anonymous]";
         else
@@ -78,11 +96,6 @@ js::StackTrace js::StackTrace::GetCurrent(v8::Isolate* isolate, IResource* resou
 void js::StackTrace::Print(v8::Isolate* isolate)
 {
     Logger::Error(GetCurrent(isolate).ToString());
-}
-
-void js::RunEventLoop()
-{
-    GetCurrentResource()->RunEventLoop();
 }
 
 void js::TryCatch::PrintError(bool skipLocation)
@@ -116,8 +129,15 @@ void js::TryCatch::PrintError(bool skipLocation)
     if(!stack.empty()) Logger::Error("[JS]", stack);
 
     js::Event::EventArgs args;
-    args.Set("error", exceptionStr);
+    args.Set("error", exception);
     args.Set("stack", stack);
+
+    js::Object location;
+    location.Set("fileName", file);
+    location.Set("lineNumber", line);
+
+    args.Set("location", location);
+
     js::Event::SendEvent(js::EventType::ERROR, args, resource);
 }
 
@@ -133,23 +153,45 @@ js::IResource* js::PersistentValue::GetResource()
     return resource;
 }
 
-void js::Object::SetMethod(const std::string& key, js::FunctionCallback callback)
+void js::Object::SetMethod(std::string_view key, js::internal::FunctionCallback callback)
 {
-    object->Set(context, JSValue(key), WrapFunction(callback)->GetFunction(context).ToLocalChecked());
+    v8::Local<v8::Function> method = WrapFunction(callback)->GetFunction(context).ToLocalChecked();
+    object->Set(context, JSValue(key), method);
 }
 
-js::Type js::Object::GetType(const std::string& key)
+void js::Object::SetBoundMethod(std::string_view key, js::internal::FunctionCallback callback)
 {
-    if(typeCache.contains(key)) return typeCache.at(key);
+    object->SetLazyDataProperty(context, JSValue(key), Wrapper::BoundFunctionHandler, v8::External::New(v8::Isolate::GetCurrent(), (void*)callback));
+}
+
+js::Type js::Object::GetType(std::string_view key)
+{
+    auto it = typeCache.find(key.data());
+    if(it != typeCache.end()) return it->second;
     v8::MaybeLocal<v8::Value> maybeVal = object->Get(context, js::JSValue(key));
     v8::Local<v8::Value> val;
     if(!maybeVal.ToLocal(&val)) return js::Type::INVALID;
     js::Type type = js::GetType(val, GetResource());
-    typeCache.insert({ key, type });
+    typeCache.insert({ std::string(key), type });
     return type;
 }
 
-js::TemporaryGlobalExtension::TemporaryGlobalExtension(v8::Local<v8::Context> _ctx, const std::string& _name, js::FunctionCallback _callback) : ctx(_ctx), name(_name)
+js::TemporaryGlobalExtension::TemporaryGlobalExtension(v8::Local<v8::Context> _ctx, const std::string& _name, js::internal::FunctionCallback _callback) : ctx(_ctx), name(_name)
 {
     ctx->Global()->Set(ctx, JSValue(_name), WrapFunction(_callback)->GetFunction(ctx).ToLocalChecked());
+}
+
+js::Promise::~Promise()
+{
+    if(owned) resource->RemovePromise(this);
+}
+
+void js::StringOutputStream::EndOfStream()
+{
+    resource->PushNextTickCallback(
+      [this]()
+      {
+          this->callback(this->stream.str());
+          delete this;
+      });
 }

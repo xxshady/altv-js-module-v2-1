@@ -1,12 +1,12 @@
 # JS bindings
 
-The JS bindings can be found in the `shared/js`, `server/js` and `client/js` folders. These bindings are read and put into the output `shared/src/BindingsMap.cpp` file
+The JS bindings can be found in the `shared/js`, `server/js` and `client/js` folders. These bindings are read and put into the output `build/BindingsMap.cpp` file
 by the `tools/generate-bindings.js` script.
 
 That script is executed before building and reads all the JS bindings and inserts them into a C++ map in the output file. The path, name, JS source and scope
 of the binding is stored and can then be accessed at runtime from C++ by using `Binding::Get`.
 
-When a resource is started, all the bindings are compiled and evaluated in the Context of that resource, and the exports of them are stored.
+When a resource is started, all the bindings are compiled and evaluated in the Context of that resource, and the binding exports of them are stored.
 
 ## Adding a new binding
 
@@ -17,6 +17,12 @@ The access the API there is a global `alt` available in the bindings which can b
 To use logging in a bindings file, make sure that file calls `requireBinding("shared/logging.js")` before, so that alt.log is available.
 
 After the next compilation of the project, the binding will automatically be compiled and evaluated on resource start and show the errors if there are any.
+
+### Compatibility bindings
+
+Bindings that should only be run in v1 compatibility mode should go into the `compatibility` subfolder in their respective scope.
+
+The module automatically checks whether a binding is in this folder and compatibility mode is enabled, and if it is not, the binding is not loaded.
 
 ## Binding names
 
@@ -36,14 +42,33 @@ get the export from the resource and afterwards use it however needed. These ste
 
 To register a binding export for later use, call the `cppBindings.registerExport` function in the binding.
 
-It takes the name of the export as the first argument, and the value as the second argument.
+It takes the enum value of the export as the first argument, and the value as the second argument.
+
+So we have to add an enum value to the `BindingExport` enum, like shown here: (found in `shared/src/IBindingExportHandler.h`)
+```cpp
+enum class BindingExport : uint8_t
+{
+    // Functions
+    ON_EVENT,
+    TICK,
+    // ... and so on
+
+    MY_EXPORT, // Our own enum value added here!
+
+    SIZE,
+};
+```
+
+> NOTE: Generally the order of the enum is not important, but the `SIZE` element has to always be the last!
+
+Then the enum value is available on the `cppBindings.BindingExport` object in our binding, which we can then use to register our export:
 
 Example:
 ```js
 function myExport() {
     // do something
 }
-cppBindings.registerExport("funcs:myExport", myExport);
+cppBindings.registerExport(cppBindings.BindingExport.MY_EXPORT, myExport);
 ```
 
 ### Getting and using a binding export
@@ -56,7 +81,7 @@ This function also optionally has a template argument to get the export in the r
 Example:
 ```cpp
 js::IResource* resource = GetCurrentResource(); // Fictional function, get the current resource pointer via e.g. `ctx.GetResource()`
-v8::Local<v8::Function> myExportedFunction = resource->GetBindingExport<v8::Function>("funcs:myExport");
+v8::Local<v8::Function> myExportedFunction = resource->GetBindingExport<v8::Function>(js::BindingExport::MY_EXPORT);
 if(myExportedFunction.IsEmpty()) return; // Check if the binding exists, accessing an empty local otherwise crashes.
 // Do whatever the export is needed for
 ```
@@ -65,6 +90,6 @@ if(myExportedFunction.IsEmpty()) return; // Check if the binding exists, accessi
 Or if using the [value helpers](helpers.md) is desired instead:
 ```cpp
 js::IResource* resource = GetCurrentResource();
-js::Function myExportedFunction = resource->GetBindingExport<v8::Function>("funcs:myExport"); // Implicit conversion to helper type
+js::Function myExportedFunction = resource->GetBindingExport<v8::Function>(js::BindingExport::MY_EXPORT); // Implicit conversion to helper type
 if(!myExportedFunction.IsValid()) return;
 ```

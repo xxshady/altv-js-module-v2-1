@@ -7,6 +7,7 @@ const dns = require("dns");
 const url = require("url");
 
 const alt = __altModule;
+const cppBindings = __cppBindings;
 
 (async () => {
     let _exports = null;
@@ -20,6 +21,9 @@ const alt = __altModule;
         const pathStr = url.pathToFileURL(_path).toString();
         _exports = await esmLoader.import(pathStr, "", {});
     } catch (e) {
+        if ((e?.message ?? "").includes("No such module was linked: alt")) {
+            alt.logError("Did you forget to enable v1 compatibility? https://go.altv.mp/jsv2-compat");
+        }
         alt.logError(e);
     }
 
@@ -61,7 +65,8 @@ function setupImports() {
         });
     });
     translators.set(altModuleInternalPrefix, async function (url) {
-        const exports = alt; // The alt module has all of the shared module, so we can just use that
+        const name = url.slice(altModuleInternalPrefix.length + 1); // Remove prefix
+        const exports = cppBindings.getBuiltinModule(name);
         const exportKeys = Object.keys(exports);
         return new ModuleWrap(url, undefined, exportKeys, function () {
             for (const exportName in exports) {
@@ -75,7 +80,7 @@ function setupImports() {
     });
 
     const _warningPackages = {
-        "node-fetch": "Console hangs",
+        "node-fetch": "Console hangs"
     };
     const customLoaders = [
         {
@@ -84,19 +89,16 @@ function setupImports() {
                     if (specifier.startsWith(`${altResourceImportPrefix}/`))
                         return {
                             url: `${altResourceInternalPrefix}:${specifier.slice(altResourceImportPrefix.length + 1)}`,
-                            shortCircuit: true,
+                            shortCircuit: true
                         };
 
-                    if (specifier.startsWith(`${altModuleImportPrefix}/`))
+                    if (cppBindings.getBuiltinModule(specifier) !== null)
                         return {
-                            url: `${altModuleInternalPrefix}:${specifier.slice(altModuleImportPrefix.length + 1)}`,
-                            shortCircuit: true,
+                            url: `${altModuleInternalPrefix}:${specifier}`,
+                            shortCircuit: true
                         };
 
-                    if (_warningPackages.hasOwnProperty(specifier))
-                        alt.logWarning(
-                            `Using the module "${specifier}" can cause problems. Reason: ${_warningPackages[specifier]}`
-                        );
+                    if (_warningPackages.hasOwnProperty(specifier)) alt.logWarning(`Using the module "${specifier}" can cause problems. Reason: ${_warningPackages[specifier]}`);
                     return defaultResolve(specifier, context, defaultResolve);
                 },
                 load(url, context, defaultLoad) {
@@ -104,25 +106,20 @@ function setupImports() {
                         return {
                             format: "altresource",
                             source: null,
-                            shortCircuit: true,
+                            shortCircuit: true
                         };
 
                     if (url.startsWith(`${altModuleInternalPrefix}:`)) {
-                        const name = url.slice(altModuleInternalPrefix.length + 1); // Remove prefix
-                        if (name !== "server" && name !== "shared") {
-                            alt.logError("Invalid alt:V module import:", name);
-                            return defaultLoad(url, context, defaultLoad);
-                        }
                         return {
                             format: "altmodule",
                             source: null,
-                            shortCircuit: true,
+                            shortCircuit: true
                         };
                     }
                     return defaultLoad(url, context, defaultLoad);
-                },
-            },
-        },
+                }
+            }
+        }
     ];
     esmLoader.addCustomLoaders(customLoaders);
 }

@@ -14,18 +14,27 @@ void js::Module::Register(ModuleTemplate& tpl)
     {
         tpl.StaticProperty(class_->GetName(), class_->GetTemplate(isolate).Get());
     }
-    initCb(tpl);
+    if(initCb) initCb(tpl);
 }
 
 v8::Local<v8::Object> js::Module::GetNamespace(IResource* resource)
 {
-    if(!instanceMap.contains(resource))
+    js::Object modNamespace(nullptr);
+    if(customGetNamespaceCb) modNamespace = customGetNamespaceCb(resource);
+    else
     {
-        v8::Local<v8::Object> obj = templateMap.at(resource->GetIsolate()).Get()->NewInstance(resource->GetContext()).ToLocalChecked();
-        instanceMap.insert({ resource, Persistent<v8::Object>(resource->GetIsolate(), obj) });
-        return obj;
+        if(!instanceMap.contains(resource))
+        {
+            v8::Local<v8::Object> obj = templateMap.at(resource->GetIsolate()).Get()->NewInstance(resource->GetContext()).ToLocalChecked();
+            instanceMap.insert({ resource, Persistent<v8::Object>(resource->GetIsolate(), obj) });
+            modNamespace = obj;
+        }
+        else
+            modNamespace = instanceMap.at(resource).Get(resource->GetIsolate());
     }
-    return instanceMap.at(resource).Get(resource->GetIsolate());
+
+    if(HasOption(Option::EXPORT_AS_DEFAULT)) modNamespace.Set("default", modNamespace.Get());
+    return modNamespace.Get();
 }
 
 void js::Module::Initialize(v8::Isolate* isolate)
@@ -40,16 +49,10 @@ void js::Module::Initialize(v8::Isolate* isolate)
 
 void js::Module::Cleanup(v8::Isolate* isolate)
 {
-    for(auto& [name, module] : GetAll())
-    {
-        module->templateMap.erase(isolate);
-    }
+    for(auto& [_, module] : GetAll()) module->templateMap.erase(isolate);
 }
 
 void js::Module::CleanupForResource(IResource* resource)
 {
-    for(auto& [_, mod] : GetAll())
-    {
-        mod->instanceMap.erase(resource);
-    }
+    for(auto& [_, mod] : GetAll()) mod->instanceMap.erase(resource);
 }

@@ -599,14 +599,14 @@ let {
     // v8::External shit
     isExternal = () => false,
     isMap = (obj) => obj instanceof Map,
-    isMapIterator = (obj) => obj?.toString() === "[object Map Iterator]",
+    isMapIterator = (obj) => obj?.toString?.() === "[object Map Iterator]",
     isModuleNamespaceObject,
 
     // idk how to add it, maybe `instanceof Error` would be ok?
     isNativeError = (e) => false,
     isPromise = (obj) => obj instanceof Promise,
     isSet = (obj) => obj instanceof Set,
-    isSetIterator = (obj) => obj?.toString() === "[object Set Iterator]",
+    isSetIterator = (obj) => obj?.toString?.() === "[object Set Iterator]",
     isWeakMap = (obj) => obj instanceof WeakMap,
     isWeakSet = (obj) => obj instanceof WeakSet,
     isRegExp = (obj) => obj instanceof RegExp,
@@ -2809,7 +2809,7 @@ const inspectMultiple = (options, ...args) => {
     }
     return str;
 };
-cppBindings.registerExport("logging:inspectMultiple", inspectMultiple);
+cppBindings.registerExport(cppBindings.BindingExport.LOG_INSPECT, inspectMultiple);
 
 /** @type {Map<string, number>} */
 const timeLabelMap = new Map();
@@ -2831,10 +2831,20 @@ function timeEnd(label) {
     timeLabelMap.delete(label ?? "Timer");
 }
 
-if (!globalThis.console) globalThis.console = {};
-globalThis.console.log = alt.log;
-globalThis.console.warn = alt.logWarning;
-globalThis.console.error = alt.logError;
-globalThis.console.time = time;
-globalThis.console.timeLog = timeLog;
-globalThis.console.timeEnd = timeEnd;
+function logDebug(...args) {
+    if (!alt.isDebug) return;
+    alt.log(...args);
+}
+
+alt.logDebug = logDebug;
+
+if (alt.isClient) {
+    if (!globalThis.console) globalThis.console = {};
+    globalThis.console.log = alt.log;
+    globalThis.console.debug = alt.logDebug;
+    globalThis.console.warn = alt.logWarning;
+    globalThis.console.error = alt.logError;
+    globalThis.console.time = time;
+    globalThis.console.timeLog = timeLog;
+    globalThis.console.timeEnd = timeEnd;
+}

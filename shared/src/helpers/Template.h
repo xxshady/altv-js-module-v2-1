@@ -10,30 +10,7 @@
 #include "Logger.h"
 #include "Callbacks.h"
 
-template<auto x>
-struct function_traits;
-
-template<class Class, class Return, class... Args, Return (Class::*FuncPtr)(Args...)>
-struct function_traits<FuncPtr>
-{
-    using ClassType = Class;
-    using ReturnType = Return;
-    typedef Return (Class::*FunctionPointerType)(Args...);
-    using Arguments = std::tuple<Args...>;
-
-    static constexpr decltype(FuncPtr) FunctionPtr = FuncPtr;
-};
-
-template<class Class, class Return, class... Args, Return (Class::*FuncPtr)(Args...) const>
-struct function_traits<FuncPtr>
-{
-    using ClassType = Class;
-    using ReturnType = Return;
-    typedef Return (Class::*FunctionPointerType)(Args...);
-    using Arguments = std::tuple<Args...>;
-
-    static constexpr decltype(FuncPtr) FunctionPtr = FuncPtr;
-};
+#include "interfaces/IBindingExportHandler.h"
 
 namespace js
 {
@@ -45,24 +22,49 @@ namespace js
         template<class T>
         using CleanArg = typename std::remove_cv_t<typename std::remove_reference_t<T>>;
 
+        template<auto x>
+        struct function_traits;
+
+        template<class Class, class Return, class... Args, Return (Class::*FuncPtr)(Args...)>
+        struct function_traits<FuncPtr>
+        {
+            using ClassType = Class;
+            using ReturnType = Return;
+            typedef Return (Class::*FunctionPointerType)(Args...);
+            using Arguments = std::tuple<Args...>;
+
+            static constexpr decltype(FuncPtr) FunctionPtr = FuncPtr;
+        };
+
+        template<class Class, class Return, class... Args, Return (Class::*FuncPtr)(Args...) const>
+        struct function_traits<FuncPtr>
+        {
+            using ClassType = Class;
+            using ReturnType = Return;
+            typedef Return (Class::*FunctionPointerType)(Args...);
+            using Arguments = std::tuple<Args...>;
+
+            static constexpr decltype(FuncPtr) FunctionPtr = FuncPtr;
+        };
+
         static void FunctionHandler(const v8::FunctionCallbackInfo<v8::Value>& info)
         {
             FunctionContext ctx{ info };
-            auto callback = reinterpret_cast<FunctionCallback>(info.Data().As<v8::External>()->Value());
+            auto callback = reinterpret_cast<internal::FunctionCallback>(info.Data().As<v8::External>()->Value());
             callback(ctx);
         }
 
         static void PropertyHandler(const v8::FunctionCallbackInfo<v8::Value>& info)
         {
             PropertyContext ctx{ info, info[0] };
-            auto callback = reinterpret_cast<PropertyCallback>(info.Data().As<v8::External>()->Value());
+            auto callback = reinterpret_cast<internal::PropertyCallback>(info.Data().As<v8::External>()->Value());
             callback(ctx);
         }
 
         static void LazyPropertyHandler(v8::Local<v8::Name>, const v8::PropertyCallbackInfo<v8::Value>& info)
         {
             LazyPropertyContext ctx{ info };
-            auto callback = reinterpret_cast<LazyPropertyCallback>(info.Data().As<v8::External>()->Value());
+            auto callback = reinterpret_cast<internal::LazyPropertyCallback>(info.Data().As<v8::External>()->Value());
             callback(ctx);
         }
 
@@ -129,6 +131,8 @@ namespace js
             if(!ctx.CheckThis()) return;
 
             Class* obj = ctx.GetThisObject<Class>();
+            if (!obj) return;
+            
             ctx.Return((obj->*Getter)());
         }
         template<auto Setter>
@@ -180,16 +184,58 @@ namespace js
             ctx.Return(entity);
         }
 
+#ifdef ALT_CLIENT_API
+        template<alt::IBaseObject::Type Type>
+        void GetByRemoteIDHandler(FunctionContext& ctx)
+        {
+            if(!ctx.CheckArgCount(1)) return;
+
+            uint32_t id;
+            if(!ctx.GetArg(0, id)) return;
+
+            alt::IBaseObject* entity = alt::ICore::Instance().GetBaseObjectByRemoteID(Type, id);
+            ctx.Return(entity);
+        }
+#endif
+
+        template<typename T>
+        static void EnumObjectGetter(LazyPropertyContext& ctx)
+        {
+            js::Object obj;
+            auto values = magic_enum::template enum_entries<T>();
+            for(auto& [value, key] : values)
+            {
+                obj.Set(key.data(), (int)value);
+                obj.Set((std::string_view)std::to_string((int)value), key.data());
+            }
+            ctx.Return(obj);
+        }
+
+        template<typename T, T Start, T End>
+        static void EnumObjectWithStartEndGetter(LazyPropertyContext& ctx)
+        {
+            js::Object obj;
+            auto values = magic_enum::template enum_entries<T>();
+            for(int i = (int)Start + 1; i < (int)End; i++)
+            {
+                auto& entry = values[i];
+                obj.Set(entry.second.data(), (int)entry.first);
+                obj.Set((std::string_view)std::to_string((int)entry.first), entry.second.data());
+            }
+            ctx.Return(obj);
+        }
+
+        void BoundFunctionHandler(v8::Local<v8::Name>, const v8::PropertyCallbackInfo<v8::Value>& info);
     }  // namespace Wrapper
 
-    static v8::Local<v8::FunctionTemplate> WrapFunction(FunctionCallback cb)
+    static v8::Local<v8::FunctionTemplate> WrapFunction(internal::FunctionCallback cb)
     {
         v8::Isolate* isolate = v8::Isolate::GetCurrent();
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Wrapper::FunctionHandler, v8::External::New(isolate, (void*)cb));
         return tpl;
     }
 
-    static v8::Local<v8::FunctionTemplate> WrapProperty(PropertyCallback cb)
+    static v8::Local<v8::FunctionTemplate> WrapProperty(internal::PropertyCallback cb)
     {
         v8::Isolate* isolate = v8::Isolate::GetCurrent();
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Wrapper::PropertyHandler, v8::External::New(isolate, (void*)cb));
@@ -205,12 +251,15 @@ namespace js
     public:
         struct DynamicPropertyData
         {
-            DynamicPropertyGetter getter;
-            DynamicPropertySetter setter;
-            DynamicPropertyDeleter deleter;
-            DynamicPropertyEnumerator enumerator;
+            internal::DynamicPropertyGetter getter;
+            internal::DynamicPropertySetter setter;
+            internal::DynamicPropertyDeleter deleter;
+            internal::DynamicPropertyEnumerator enumerator;
 
-            DynamicPropertyData(DynamicPropertyGetter _getter, DynamicPropertySetter _setter, DynamicPropertyDeleter _deleter, DynamicPropertyEnumerator _enumerator)
+            DynamicPropertyData(internal::DynamicPropertyGetter _getter,
+                                internal::DynamicPropertySetter _setter,
+                                internal::DynamicPropertyDeleter _deleter,
+                                internal::DynamicPropertyEnumerator _enumerator)
                 : getter(_getter), setter(_setter), deleter(_deleter), enumerator(_enumerator)
             {
             }
@@ -233,27 +282,38 @@ namespace js
             static_assert(IsJSValueConvertible<T>, "Type is not convertible to JS value");
             Get()->Set(js::JSValue(name), js::JSValue(value), (v8::PropertyAttribute)(v8::PropertyAttribute::ReadOnly | v8::PropertyAttribute::DontDelete));
         }
-        void StaticProperty(const std::string& name, PropertyCallback getter, PropertyCallback setter = nullptr)
+        void StaticProperty(const std::string& name, internal::PropertyCallback getter, internal::PropertyCallback setter = nullptr)
         {
             Get()->SetAccessorProperty(js::JSValue(name), WrapProperty(getter), setter ? WrapProperty(setter) : v8::Local<v8::FunctionTemplate>());
         }
         // Property returns an object that will call the specified handlers
         void StaticDynamicProperty(const std::string& name,
-                                   DynamicPropertyGetter getter,
-                                   DynamicPropertySetter setter = nullptr,
-                                   DynamicPropertyDeleter deleter = nullptr,
-                                   DynamicPropertyEnumerator enumerator = nullptr)
+                                   internal::DynamicPropertyGetter getter,
+                                   internal::DynamicPropertySetter setter = nullptr,
+                                   internal::DynamicPropertyDeleter deleter = nullptr,
+                                   internal::DynamicPropertyEnumerator enumerator = nullptr)
         {
             DynamicPropertyData* data = new DynamicPropertyData(getter, setter, deleter, enumerator);
             Get()->SetLazyDataProperty(js::JSValue(name), Wrapper::DynamicPropertyLazyHandler, v8::External::New(GetIsolate(), data));
         }
 
-        void StaticLazyProperty(const std::string& name, LazyPropertyCallback callback)
+        void StaticLazyProperty(const std::string& name, internal::LazyPropertyCallback callback)
         {
             Get()->SetLazyDataProperty(js::JSValue(name), Wrapper::LazyPropertyHandler, v8::External::New(GetIsolate(), (void*)callback));
         }
 
-        virtual void StaticFunction(const std::string& name, FunctionCallback callback)
+        template<typename Enum>
+        void StaticEnum(const std::string& name)
+        {
+            StaticLazyProperty(name, Wrapper::EnumObjectGetter<Enum>);
+        }
+        template<typename Enum, Enum Start, Enum End>
+        void StaticEnum(const std::string& name)
+        {
+            StaticLazyProperty(name, Wrapper::EnumObjectWithStartEndGetter<Enum, Start, End>);
+        }
+
+        virtual void StaticFunction(const std::string& name, internal::FunctionCallback callback)
         {
             Get()->Set(js::JSValue(name), WrapFunction(callback), (v8::PropertyAttribute)(v8::PropertyAttribute::ReadOnly | v8::PropertyAttribute::DontDelete));
         }
@@ -283,7 +343,7 @@ namespace js
             Get()->Set(js::JSValue(name), v8::ObjectTemplate::New(GetIsolate()));
         }
 
-        void StaticBindingExport(const std::string& name, const std::string& exportName);
+        void StaticBindingExport(const std::string& name, BindingExport export_);
     };
 
     class ClassTemplate : public Template<v8::FunctionTemplate>
@@ -292,16 +352,7 @@ namespace js
 
         Class* class_;
 
-#ifdef DEBUG_BINDINGS
-        std::unordered_map<std::string, std::string> registeredKeys;
-
-        void RegisterKey(const std::string& type, const std::string& key)
-        {
-            registeredKeys.insert({ key, type });
-        }
-#endif
-
-        std::unordered_map<std::string, js::FunctionCallback> staticMethods;
+        std::unordered_map<std::string, js::internal::FunctionCallback> staticMethods;
 
         template<class T>
         using ClassMap = std::unordered_map<v8::Isolate*, std::unordered_map<Class*, T>>;
@@ -328,10 +379,7 @@ namespace js
                 auto& clsMap = it->second;
                 for(auto& [_, nameMap] : clsMap)
                 {
-                    for(auto& [__, data] : nameMap)
-                    {
-                        delete data;
-                    }
+                    for(auto& [__, data] : nameMap) delete data;
                 }
             }
             dynamicPropertyDataMap.erase(isolate);
@@ -355,6 +403,11 @@ namespace js
             GetPropertyGetterMap().erase(isolate);
         }
 
+        void RegisterStaticMethods()
+        {
+            for(auto& [name, callback] : staticMethods) Template::StaticFunction(name, callback);
+        }
+
     public:
         ClassTemplate(v8::Isolate* isolate, Class* _class, v8::Local<v8::FunctionTemplate> tpl) : Template(isolate, tpl), class_(_class) {}
 
@@ -364,43 +417,32 @@ namespace js
             Get()->PrototypeTemplate()->Set(js::JSValue(name), v8::FunctionTemplate::New(GetIsolate(), Wrapper::MethodHandler<Func>));
         }
 
-#ifdef DEBUG_BINDINGS
-        void DumpRegisteredKeys();
-#endif
-
-        void Method(const std::string& name, FunctionCallback callback)
+        void Method(const std::string& name, internal::FunctionCallback callback)
         {
-#ifdef DEBUG_BINDINGS
-            RegisterKey("Method", name);
-#endif
             Get()->PrototypeTemplate()->Set(js::JSValue(name), WrapFunction(callback));
+        }
+        // Always has the `this` context of the method set to the parent object (even when destructuring)
+        void BoundMethod(const std::string& name, internal::FunctionCallback callback)
+        {
+            Get()->InstanceTemplate()->SetLazyDataProperty(JSValue(name), Wrapper::BoundFunctionHandler, v8::External::New(v8::Isolate::GetCurrent(), (void*)callback));
         }
 #pragma endregion
 
         template<auto Getter>
         void Property(const std::string& name)
         {
-#ifdef DEBUG_BINDINGS
-            RegisterKey("Property", name);
-#endif
             Get()->PrototypeTemplate()->SetAccessor(js::JSValue(name), Wrapper::PropertyGetterHandler<Getter>, nullptr, v8::Local<v8::Value>(), v8::DEFAULT, v8::ReadOnly);
         }
 
         template<auto Getter, auto Setter>
         void Property(const std::string& name)
         {
-#ifdef DEBUG_BINDINGS
-            RegisterKey("Property", name);
-#endif
             Get()->PrototypeTemplate()->SetAccessor(js::JSValue(name), Wrapper::PropertyGetterHandler<Getter>, Wrapper::PropertySetterHandler<Setter>);
         }
 
         // If getter is nullptr, tries to get the getter defined by a base class
-        void Property(const std::string& name, PropertyCallback getter = nullptr, PropertyCallback setter = nullptr)
+        void Property(const std::string& name, internal::PropertyCallback getter = nullptr, internal::PropertyCallback setter = nullptr)
         {
-#ifdef DEBUG_BINDINGS
-            RegisterKey("Property", name);
-#endif
             if(getter && !setter)
             {
                 v8::Local<v8::FunctionTemplate> getterTemplate = WrapProperty(getter);
@@ -428,30 +470,21 @@ namespace js
         template<auto Getter>
         void LazyProperty(const std::string& name)
         {
-#ifdef DEBUG_BINDINGS
-            RegisterKey("LazyProperty", name);
-#endif
             Get()->InstanceTemplate()->SetLazyDataProperty(js::JSValue(name), Wrapper::LazyPropertyHandler<Getter>, v8::Local<v8::Value>(), v8::PropertyAttribute::ReadOnly);
         }
-        void LazyProperty(const std::string& name, LazyPropertyCallback callback)
+        void LazyProperty(const std::string& name, internal::LazyPropertyCallback callback)
         {
-#ifdef DEBUG_BINDINGS
-            RegisterKey("LazyProperty", name);
-#endif
             Get()->InstanceTemplate()->SetLazyDataProperty(
               js::JSValue(name), Wrapper::LazyPropertyHandler, v8::External::New(GetIsolate(), (void*)callback), v8::PropertyAttribute::ReadOnly);
         }
 
         // Property returns an object that will call the specified handlers
         void DynamicProperty(const std::string& name,
-                             DynamicPropertyGetter getter,
-                             DynamicPropertySetter setter = nullptr,
-                             DynamicPropertyDeleter deleter = nullptr,
-                             DynamicPropertyEnumerator enumerator = nullptr)
+                             internal::DynamicPropertyGetter getter,
+                             internal::DynamicPropertySetter setter = nullptr,
+                             internal::DynamicPropertyDeleter deleter = nullptr,
+                             internal::DynamicPropertyEnumerator enumerator = nullptr)
         {
-#ifdef DEBUG_BINDINGS
-            RegisterKey("DynamicProperty", name);
-#endif
             DynamicPropertyData* data = GetDynamicPropertyData(GetIsolate(), class_, name);
             if(!data)
             {
@@ -465,13 +498,13 @@ namespace js
                 if(deleter) data->deleter = deleter;
                 if(enumerator) data->enumerator = enumerator;
             }
-            Get()->PrototypeTemplate()->SetLazyDataProperty(js::JSValue(name), Wrapper::DynamicPropertyLazyHandler, v8::External::New(GetIsolate(), data), v8::ReadOnly);
+            Get()->InstanceTemplate()->SetLazyDataProperty(
+              js::JSValue(name), Wrapper::DynamicPropertyLazyHandler, v8::External::New(GetIsolate(), data), (v8::PropertyAttribute)(v8::ReadOnly | v8::DontEnum));
         }
 
-        void StaticFunction(const std::string& name, FunctionCallback callback) override
+        void StaticFunction(const std::string& name, internal::FunctionCallback callback) override
         {
             staticMethods[name] = callback;
-            Template::StaticFunction(name, callback);
         }
 
         template<alt::IBaseObject::Type Type>
@@ -480,8 +513,16 @@ namespace js
             StaticFunction("getByID", Wrapper::GetByIDHandler<Type>);
         }
 
+#ifdef ALT_CLIENT_API
+        template<alt::IBaseObject::Type Type>
+        void GetByRemoteID()
+        {
+            StaticFunction("getByRemoteID", Wrapper::GetByRemoteIDHandler<Type>);
+        }
+#endif
+
         // Allows instances of this class to be called as a function
-        void CallHandler(FunctionCallback cb)
+        void CallHandler(internal::FunctionCallback cb)
         {
             Get()->PrototypeTemplate()->SetCallAsFunctionHandler(Wrapper::FunctionHandler, v8::External::New(GetIsolate(), (void*)cb));
         }

@@ -1,13 +1,25 @@
 #include "NativeInvoker.h"
 #include "CJavaScriptResource.h"
 
+char* js::NativeInvoker::SaveString(const std::string& str)
+{
+    static char* stringValues[256] = { 0 };
+    static int nextString = 0;
+
+    if(stringValues[nextString]) free(stringValues[nextString]);
+
+    char* _str = _strdup(str.data());
+    stringValues[nextString] = _str;
+    nextString = (nextString + 1) % 256;
+
+    return _str;
+}
+
 bool js::NativeInvoker::PushArgs(js::FunctionContext& ctx, alt::INative* native)
 {
     using Type = alt::INative::Type;
 
-    CJavaScriptResource* resource = ctx.GetResource<CJavaScriptResource>();
     std::vector<alt::INative::Type> nativeArgs = native->GetArgTypes();
-    int args = ctx.GetArgCount();
 
     for(size_t i = 0; i < nativeArgs.size(); i++)
     {
@@ -103,7 +115,7 @@ v8::Local<v8::Value> js::NativeInvoker::GetPointerReturnValue(alt::INative::Type
             return resource->CreateVector3({ vector->x, vector->y, vector->z });
         }
     }
-    js::Logger::Warn("[JS] Unknown native pointer return type:", magic_enum::enum_name(type), (int)type);
+    // js::Logger::Warn("[JS] Unknown native pointer return type:", magic_enum::enum_name(type), (int)type);
     return v8::Undefined(resource->GetIsolate());
 }
 
@@ -141,15 +153,9 @@ void* js::NativeInvoker::GetBufferFromValue(v8::Local<v8::Value> val)
 }
 
 js::NativeInvoker::NativeInvoker(CJavaScriptResource* resource, alt::INative* native) : resource(resource), native(native), nativeContext(resource->GetNativeContext()) {}
-js::NativeInvoker::~NativeInvoker()
-{
-    for(int i = 0; i < 32; ++i)
-    {
-        if(stringValues[i] != NULL) free(stringValues[i]);
-    }
-}
+js::NativeInvoker::~NativeInvoker() {}
 
-bool js::NativeInvoker::Invoke(js::FunctionContext& ctx, alt::INative* native)
+bool js::NativeInvoker::Invoke(js::FunctionContext& ctx, alt::INative* native, bool addVoidReturn)
 {
     CJavaScriptResource* resource = ctx.GetResource<CJavaScriptResource>();
     std::shared_ptr<alt::INative::Context> nativeCtx = resource->GetNativeContext();
@@ -170,10 +176,14 @@ bool js::NativeInvoker::Invoke(js::FunctionContext& ctx, alt::INative* native)
         // todo: maybe v2 should move away from this array shit
         js::Array arr{ invoker.returnsCount };
 
+        invoker.pointersCount = 0;
+
         // First element is always the return value
-        arr.Push(invoker.GetReturnValue());
+        if(addVoidReturn || native->GetRetnType() != alt::INative::Type::ARG_VOID) arr.Push(invoker.GetReturnValue());
+
         // Then push the pointer arguments into the array
-        for(size_t i = 0; i < args.size(); i++) arr.Push(invoker.GetPointerReturnValue(args[i]));
+        for(auto& arg : args)
+            if(auto val = invoker.GetPointerReturnValue(arg); !val->IsUndefined()) arr.Push(val);
 
         ctx.Return(arr);
     }

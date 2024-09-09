@@ -4,6 +4,7 @@
 #include "cpp-sdk/SDK.h"
 
 #include "Convert.h"
+#include "Logger.h"
 #include "Type.h"
 
 namespace js
@@ -20,17 +21,21 @@ namespace js
         bool errored = false;
         std::string error;
         bool noThrow = false;
-        IResource* resource = nullptr;
-        alt::IBaseObject* thisObject = nullptr;
+        mutable IResource* resource = nullptr;
 
         alt::IBaseObject* GetThisObjectUntyped()
         {
             if(errored) return nullptr;
-            if(thisObject) return thisObject;
             std::optional<alt::IBaseObject*> object = CppValue<alt::IBaseObject*>(info.This());
             if(!object.has_value()) return nullptr;
-            thisObject = object.value();
-            return thisObject;
+            return object.value();
+        }
+
+        IResource* GetResourceCached() const
+        {
+            if(resource) return resource;
+            resource = GetCurrentResource(info.GetIsolate());
+            return resource;
         }
 
     public:
@@ -44,7 +49,7 @@ namespace js
         template<class ResourceType = js::IResource>
         ResourceType* GetResource() const
         {
-            return static_cast<ResourceType*>(GetCurrentResource(info.GetIsolate()));
+            return static_cast<ResourceType*>(GetResourceCached());
         }
 
         v8::Local<v8::Context> GetContext() const
@@ -153,8 +158,18 @@ namespace js
             using Type = std::conditional_t<std::is_enum_v<T>, int, T>;
 
             if(errored) return;
-            // Use fast primitive setters if possible
-            if constexpr(std::is_same_v<Type, bool> || std::is_same_v<Type, double> || std::is_same_v<Type, float> || std::is_same_v<Type, int32_t> || std::is_same_v<Type, uint32_t>)
+
+            // Convert 64-bit integers to BigInt
+            if constexpr(std::is_same_v<Type, int64_t> || std::is_same_v<Type, uint64_t>)
+            {
+                bool constexpr isUnsigned = std::is_same_v<Type, uint64_t>;
+                if constexpr(isUnsigned)
+                    info.GetReturnValue().Set(v8::BigInt::NewFromUnsigned(info.GetIsolate(), value));
+                else
+                    info.GetReturnValue().Set(v8::BigInt::New(info.GetIsolate(), value));
+            }
+            // Then try to convert the value to primitive types
+            else if constexpr(std::is_same_v<Type, bool> || std::is_same_v<Type, double> || std::is_same_v<Type, float> || std::is_same_v<Type, int32_t> || std::is_same_v<Type, uint32_t>)
                 info.GetReturnValue().Set((Type)value);
             else if constexpr(std::is_same_v<Type, std::nullptr_t>)
                 info.GetReturnValue().SetNull();
@@ -169,6 +184,16 @@ namespace js
                 static_assert(IsJSValueConvertible<Type>, "Type is not convertible to JS value");
                 info.GetReturnValue().Set(JSValue((Type)value));
             }
+        }
+
+        void Deprecate(const std::string& message)
+        {
+            Logger::Warn("This API is deprecated: " + message);
+        }
+
+        void Deprecate(const std::string& oldProperty, const std::string& newProperty)
+        {
+            Logger::Warn(oldProperty + " is deprecated and will be removed in future versions. Consider using " + newProperty + " instead");
         }
     };
 
@@ -216,6 +241,7 @@ namespace js
 
         Type GetArgType(int index)
         {
+            if (index < 0 || index >= argTypes.size()) return Type::INVALID;
             if(argTypes[index] != Type::INVALID) return argTypes[index];
             Type argType = GetType(info[index], GetResource());
             argTypes[index] = argType;

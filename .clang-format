@@ -3,7 +3,6 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 Language: Cpp
 ColumnLimit: 190
-AccessModifierOffset: 0
 AlignAfterOpenBracket: true
 #AlignConsecutiveAssignments: true
 AlignConsecutiveBitFields: true
@@ -27,7 +26,6 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
 #BitFieldColonSpacing: Both
-BraceWrapping: Custom
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true

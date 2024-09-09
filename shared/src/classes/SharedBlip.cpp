@@ -2,14 +2,14 @@
 #include "cpp-sdk/ICore.h"
 
 // clang-format off
-extern js::Class baseObjectClass;
-extern js::Class sharedBlipClass("SharedBlip", &baseObjectClass, nullptr, [](js::ClassTemplate& tpl)
+extern js::Class worldObjectClass;
+extern js::Class sharedBlipClass("SharedBlip", &worldObjectClass, nullptr, [](js::ClassTemplate& tpl)
 {
     tpl.Property<&alt::IBlip::IsGlobal>("global");
     tpl.Property<&alt::IBlip::IsAttached>("isAttached");
     tpl.Property<&alt::IBlip::AttachedTo>("attachedTo");
     tpl.Property<&alt::IBlip::GetBlipType, &alt::IBlip::SetBlipType>("blipType");
-    tpl.Property<&alt::IBlip::GetScaleXY, &alt::IBlip::SetScaleXY>("scale");
+    tpl.Property<&alt::IBlip::GetScaleXY, &alt::IBlip::SetScaleXY>("scaleXY");
     tpl.Property<&alt::IBlip::GetDisplay, &alt::IBlip::SetDisplay>("display");
     tpl.Property<&alt::IBlip::GetSprite, &alt::IBlip::SetSprite>("sprite");
     tpl.Property<&alt::IBlip::GetColor, &alt::IBlip::SetColor>("color");

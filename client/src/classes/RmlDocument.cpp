@@ -1,4 +1,5 @@
 #include "Class.h"
+#include "interfaces/IResource.h"
 
 static void Show(js::FunctionContext& ctx)
 {

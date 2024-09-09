@@ -144,6 +144,30 @@ static void SendNamesSetter(js::PropertyContext& ctx)
     player->SetSendNames(state);
 }
 
+static void StreamedEntitiesGetter(js::PropertyContext& ctx)
+{
+    if(!ctx.CheckThis()) return;
+    alt::IPlayer* player = ctx.GetThisObject<alt::IPlayer>();
+
+    auto isolate = ctx.GetIsolate();
+    auto _ctx = ctx.GetContext();
+
+    const std::vector<std::pair<alt::IEntity*, int32_t>> list = player->GetStreamedEntities();
+    js::Array streamedInEntities(list.size());
+
+    for(auto& [entity, distance] : list)
+    {
+        js::Object entityObj;
+
+        entityObj.Set("entity", entity);
+        entityObj.Set("distance", distance);
+
+        streamedInEntities.Push(entityObj);
+    }
+
+    ctx.Return(streamedInEntities);
+}
+
 static void Emit(js::FunctionContext& ctx)
 {
     if(!ctx.CheckThis()) return;
@@ -315,6 +339,24 @@ static void RemoveAllWeapons(js::FunctionContext& ctx)
     player->RemoveAllWeapons(removeAmmo);
 }
 
+static void Kick(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckThis()) return;
+    if (!ctx.CheckArgCount(0, 1)) return;
+    if (!ctx.CheckArgType(0, { js::Type::STRING, js::Type::UNDEFINED, js::Type::NULL_TYPE, js::Type::INVALID })) return;
+
+    alt::IPlayer* player = ctx.GetThisObject<alt::IPlayer>();
+
+    if (ctx.GetArgCount() == 1 && ctx.GetArgType(0) == js::Type::STRING)
+    {
+        const auto reason = ctx.GetArg<std::string>(0, "");
+        player->Kick(reason);
+        return;
+    }
+
+    player->Kick();
+}
+
 static void GetClothes(js::FunctionContext& ctx)
 {
     if(!ctx.CheckThis()) return;
@@ -330,6 +372,27 @@ static void GetClothes(js::FunctionContext& ctx)
     obj.Set("texture", cloth.textureId);
     obj.Set("palette", cloth.paletteId);
     ctx.Return(obj);
+}
+
+static void SetClothes(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckThis()) return;
+    if(!ctx.CheckArgCount(3, 4)) return;
+    alt::IPlayer* player = ctx.GetThisObject<alt::IPlayer>();
+
+    uint8_t component;
+    if(!ctx.GetArg(0, component)) return;
+
+    uint8_t drawable;
+    if(!ctx.GetArg(1, drawable)) return;
+
+    uint8_t texture;
+    if(!ctx.GetArg(2, texture)) return;
+
+    if (ctx.GetArgCount() == 4 && !ctx.CheckArgType(3, js::Type::NUMBER)) return;
+    uint8_t palette = ctx.GetArg<uint8_t>(3, 2);
+
+    ctx.Return(player->SetClothes(component, drawable, texture, palette));
 }
 
 static void GetDlcClothes(js::FunctionContext& ctx)
@@ -350,7 +413,7 @@ static void GetDlcClothes(js::FunctionContext& ctx)
     ctx.Return(obj);
 }
 
-static void GetProps(js::FunctionContext& ctx)
+static void GetProp(js::FunctionContext& ctx)
 {
     if(!ctx.CheckThis()) return;
     if(!ctx.CheckArgCount(1)) return;
@@ -381,6 +444,29 @@ static void GetDlcProps(js::FunctionContext& ctx)
     obj.Set("drawable", prop.drawableId);
     obj.Set("texture", prop.textureId);
     ctx.Return(obj);
+}
+
+static void IsEntityInStreamingRange(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckThis()) return;
+    if(!ctx.CheckArgType(0, { js::Type::BASE_OBJECT, js::Type::NUMBER })) return;
+    alt::IPlayer* player = ctx.GetThisObject<alt::IPlayer>();
+
+    uint32_t entityId = 0;
+    if(ctx.GetArgType(0) == js::Type::BASE_OBJECT)
+    {
+        alt::IBaseObject* object;
+        if(!ctx.GetArg(0, object)) return;
+        entityId = object->GetID();
+    }
+    else
+    {
+        uint32_t id;
+        if(!ctx.GetArg(0, id)) return;
+        entityId = id;
+    }
+
+    ctx.Return(player->IsEntityInStreamingRange(entityId));
 }
 
 static void GetHeadOverlay(js::FunctionContext& ctx)
@@ -676,7 +762,7 @@ static void SetAmmoMax100(js::FunctionContext& ctx)
 static void AddDecoration(js::FunctionContext& ctx)
 {
     if(!ctx.CheckThis()) return;
-    if(!ctx.CheckArgCount(2)) return;
+    if(!ctx.CheckArgCount(2, 3)) return;
     alt::IPlayer* player = ctx.GetThisObject<alt::IPlayer>();
 
     uint32_t collection;
@@ -685,7 +771,9 @@ static void AddDecoration(js::FunctionContext& ctx)
     uint32_t overlay;
     if(!ctx.GetArgAsHash(1, overlay)) return;
 
-    player->AddDecoration(collection, overlay);
+    uint8_t count = ctx.GetArg<uint8_t>(2, 1);
+
+    player->AddDecoration(collection, overlay, count);
 }
 
 static void RemoveDecoration(js::FunctionContext& ctx)
@@ -715,36 +803,11 @@ static void GetDecorations(js::FunctionContext& ctx)
         js::Object obj;
         obj.Set("collection", decoration.collection);
         obj.Set("overlay", decoration.overlay);
+        obj.Set("count", decoration.count);
         arr.Push(obj);
     }
 
     ctx.Return(arr);
-}
-
-static void RequestCloudID(js::FunctionContext& ctx)
-{
-    if(!ctx.CheckThis()) return;
-    alt::IPlayer* player = ctx.GetThisObject<alt::IPlayer>();
-    js::IAltResource* resource = ctx.GetResource<js::IAltResource>();
-
-    js::Promise* promise = new js::Promise;
-
-    const auto callback = [=](bool ok, const std::string& resultStr)
-    {
-        std::string result = resultStr;
-        resource->PushNextTickCallback(
-          [=]()
-          {
-              if(ok) promise->Resolve(result);
-              else
-                  promise->Reject(result);
-
-              delete promise;
-          });
-    };
-    player->RequestCloudID(callback);
-
-    ctx.Return(promise->Get());
 }
 
 static void LocalMetaGetter(js::DynamicPropertyGetterContext& ctx)
@@ -796,14 +859,17 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
     tpl.BindToType(alt::IBaseObject::Type::PLAYER);
 
     tpl.LazyProperty<&alt::IPlayer::GetIP>("ip");
-    tpl.LazyProperty<&alt::IPlayer::GetSocialID>("socialId");
+    tpl.LazyProperty<&alt::IPlayer::GetSocialID>("socialID");
+    tpl.LazyProperty<&alt::IPlayer::GetSocialClubName>("socialClubName");
     tpl.LazyProperty<&alt::IPlayer::GetHwidHash>("hwidHash");
     tpl.LazyProperty<&alt::IPlayer::GetHwidExHash>("hwidExHash");
+    tpl.LazyProperty<&alt::IPlayer::GetCloudID>("cloudID");
+    tpl.LazyProperty<&alt::IPlayer::GetCloudAuthResult>("cloudAuthResult");
 
     tpl.Property<&alt::IPlayer::IsConnected>("isConnected");
     tpl.Property<&alt::IPlayer::GetPing>("ping");
     tpl.Property<&alt::IPlayer::GetAuthToken>("authToken");
-    tpl.Property<&alt::IPlayer::GetDiscordId>("discordId");
+    tpl.Property<&alt::IPlayer::GetDiscordId>("discordID");
     tpl.Property("model", &ModelGetter, &ModelSetter);
     tpl.Property<&alt::IPlayer::GetArmour, &alt::IPlayer::SetArmour>("armour");
     tpl.Property<&alt::IPlayer::GetMaxArmour, &alt::IPlayer::SetMaxArmour>("maxArmour");
@@ -819,8 +885,9 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
     tpl.Property<&alt::IPlayer::GetInteriorLocation>("interiorLocation");
     tpl.Property<&alt::IPlayer::GetLastDamagedBodyPart>("lastDamagedBodyPart");
     tpl.Property("sendNames", &SendNamesGetter, &SendNamesSetter);
-    tpl.Property<&alt::IPlayer::GetCloudAuthHash>("cloudAuthHash");
+    tpl.Property("streamedEntities", StreamedEntitiesGetter);
     tpl.Property<&alt::IPlayer::IsNetworkOwnershipDisabled, &alt::IPlayer::SetNetworkOwnershipDisabled>("netOwnershipDisabled");
+    tpl.Property<&alt::IPlayer::GetBloodDamageBase64, &alt::IPlayer::SetBloodDamageBase64>("bloodDamageBase64");
 
     tpl.Method("emit", &Emit);
     tpl.Method("emitUnreliable", &EmitUnreliable);
@@ -835,17 +902,18 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
     tpl.Method("removeAllWeapons", RemoveAllWeapons);
     tpl.Method<&alt::IPlayer::SetDateTime>("setDateTime");
     tpl.Method<&alt::IPlayer::SetWeather>("setWeather");
-    tpl.Method<&alt::IPlayer::Kick>("kick");
+    tpl.Method("kick", Kick);
     tpl.Method("getClothes", &GetClothes);
-    tpl.Method<&alt::IPlayer::SetClothes>("setClothes");
+    tpl.Method("setClothes", &SetClothes);
     tpl.Method("getDlcClothes", &GetDlcClothes);
     tpl.Method<&alt::IPlayer::SetDlcClothes>("setDlcClothes");
-    tpl.Method("getProps", &GetProps);
-    tpl.Method<&alt::IPlayer::SetProps>("setProps");
-    tpl.Method("getDlcProps", &GetDlcProps);
-    tpl.Method<&alt::IPlayer::SetDlcProps>("setDlcProps");
-    tpl.Method<&alt::IPlayer::ClearProps>("clearProps");
-    tpl.Method<&alt::IPlayer::IsEntityInStreamingRange>("isEntityInStreamingRange");
+    tpl.Method<&alt::IPlayer::ClearClothes>("clearClothes");
+    tpl.Method("getProp", &GetProp);
+    tpl.Method<&alt::IPlayer::SetProps>("setProp");
+    tpl.Method("getDlcProp", &GetDlcProps);
+    tpl.Method<&alt::IPlayer::SetDlcProps>("setDlcProp");
+    tpl.Method<&alt::IPlayer::ClearProps>("clearProp");
+    tpl.Method("isEntityInStreamingRange", &IsEntityInStreamingRange);
     tpl.Method<&alt::IPlayer::SetIntoVehicle>("setIntoVehicle");
     tpl.Method<&alt::IPlayer::PlayAmbientSpeech>("playAmbientSpeech");
     tpl.Method<&alt::IPlayer::SetHeadOverlay>("setHeadOverlay");
@@ -853,10 +921,11 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
     tpl.Method<&alt::IPlayer::SetHeadOverlayColor>("setHeadOverlayColor");
     tpl.Method("getHeadOverlay", &GetHeadOverlay);
     tpl.Method<&alt::IPlayer::SetFaceFeature>("setFaceFeature");
-    tpl.Method<&alt::IPlayer::GetFaceFeatureScale>("getFaceFeatureScale");
+    tpl.Method<&alt::IPlayer::GetFaceFeatureScale>("getFaceFeature");
     tpl.Method<&alt::IPlayer::RemoveFaceFeature>("removeFaceFeature");
     tpl.Method("setHeadBlendPaletteColor", &SetHeadBlendPaletteColor);
     tpl.Method<&alt::IPlayer::GetHeadBlendPaletteColor>("getHeadBlendPaletteColor");
+    tpl.Method<&alt::IPlayer::RemoveHeadBlendPaletteColor>("removeHeadBlendPaletteColor");
     tpl.Method("playAnimation", &PlayAnimation);
     tpl.Method<&alt::IPlayer::ClearTasks>("clearTasks");
     tpl.Method("hasWeapon", HasWeapon);
@@ -879,7 +948,7 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
     tpl.Method<&alt::IPlayer::ClearDecorations>("clearDecorations");
     tpl.Method("getDecorations", GetDecorations);
     tpl.Method<&alt::IPlayer::PlayScenario>("playScenario");
-    tpl.Method("requestCloudID", RequestCloudID);
+    tpl.Method<&alt::IPlayer::RemoveHeadBlendData>("removeHeadBlendData");
 
     tpl.DynamicProperty("localMeta", LocalMetaGetter, LocalMetaSetter, LocalMetaDeleter, LocalMetaEnumerator);
 

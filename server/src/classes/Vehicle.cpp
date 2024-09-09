@@ -1,5 +1,4 @@
 #include "Class.h"
-#include "cpp-sdk/ICore.h"
 
 static void NeonSetter(js::DynamicPropertySetterContext& ctx)
 {
@@ -19,6 +18,28 @@ static void NeonSetter(js::DynamicPropertySetterContext& ctx)
         front = val;
     else if(prop == "back")
         back = val;
+
+    vehicle->SetNeonActive(left, right, front, back);
+}
+
+static void SetNeonActive(js::FunctionContext& ctx)
+{
+    if (!ctx.CheckThis()) return;
+    if (!ctx.CheckArgCount(1)) return;
+    if (!ctx.CheckArgType(0, js::Type::OBJECT)) return;
+
+    alt::IVehicle* vehicle = ctx.GetThisObject<alt::IVehicle>();
+
+    js::Object neonActive;
+    if (!ctx.GetArg(0, neonActive)) return;
+
+    bool activeLeft, activeRight, activeFront, activeBack;
+    vehicle->GetNeonActive(&activeLeft, &activeRight, &activeFront, &activeBack);
+
+    bool left = neonActive.Get<bool>("left", activeLeft);
+    bool right = neonActive.Get<bool>("right", activeRight);
+    bool front = neonActive.Get<bool>("front", activeFront);
+    bool back = neonActive.Get<bool>("back", activeBack);
 
     vehicle->SetNeonActive(left, right, front, back);
 }
@@ -56,6 +77,39 @@ static void SetMod(js::FunctionContext& ctx)
     ctx.Check(vehicle->SetMod(category, id), "Failed to set mod, invalid mod or modkit not set");
 }
 
+static void SetBadge(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckThis()) return;
+    if(!ctx.CheckArgCount(2, 6)) return;
+    alt::IVehicle* vehicle = ctx.GetThisObject<alt::IVehicle>();
+
+    uint32_t textureDictionary;
+    if (!ctx.GetArgAsHash(0, textureDictionary)) return;
+
+    uint32_t texture;
+    if (!ctx.GetArgAsHash(1, texture)) return;
+
+    alt::VehicleBadgePosition positions[4];
+
+    for (int i = 0; i < 4; i++)
+    {
+        js::Object dict = ctx.GetArg<js::Object>(i + 2, {});
+        if (!dict.IsValid()) return;
+
+        uint8_t alpha = dict.Get("alpha", 255);
+        float size = dict.Get("size", 1.f);
+        int16_t boneIndex = dict.Get("boneIndex", 0);
+        alt::Vector3f offset = dict.Get<alt::Vector3f>("offset", {0, 0, 0});
+        alt::Vector3f direction = dict.Get<alt::Vector3f>("direction", {0, 0, 0});
+        alt::Vector3f side = dict.Get<alt::Vector3f>("side", {0, 0, 0});
+
+        positions[i] = alt::VehicleBadgePosition(alpha, size, boneIndex, offset, direction, side);
+        positions[i].active = dict.Get("active", false);
+    }
+
+    vehicle->SetBadge(textureDictionary, texture, positions);
+}
+
 // clang-format off
 extern js::Class sharedVehicleClass;
 extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::ClassTemplate& tpl)
@@ -63,6 +117,7 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.BindToType(alt::IBaseObject::Type::VEHICLE);
 
     tpl.DynamicProperty("neon", nullptr, &NeonSetter, nullptr, nullptr);
+    tpl.Method("setNeonActive", &SetNeonActive);
 
     tpl.Property("modKit", &ModKitGetter, &ModKitSetter);
     tpl.Property<&alt::IVehicle::GetPrimaryColor, &alt::IVehicle::SetPrimaryColor>("primaryColor");
@@ -98,12 +153,31 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.Property<&alt::IVehicle::IsManualEngineControl, &alt::IVehicle::SetManualEngineControl>("manualEngineControl");
     tpl.Property<&alt::IVehicle::GetDamageDataBase64, &alt::IVehicle::LoadDamageDataFromBase64>("damageDataBase64");
     tpl.Property<&alt::IVehicle::GetScriptDataBase64, &alt::IVehicle::LoadScriptDataFromBase64>("scriptDataBase64");
-    tpl.Property<&alt::IVehicle::GetGameStateBase64, &alt::IVehicle::LoadGameStateFromBase64>("gameStateDataBase64");
+    tpl.Property<&alt::IVehicle::GetGameStateBase64, &alt::IVehicle::LoadGameStateFromBase64>("gameStateBase64");
     tpl.Property<&alt::IVehicle::GetHealthDataBase64, &alt::IVehicle::LoadHealthDataFromBase64>("healthDataBase64");
     tpl.Property<&alt::IVehicle::GetAttached>("attached");
     tpl.Property<&alt::IVehicle::GetAttachedTo>("attachedTo");
     tpl.Property<&alt::IVehicle::IsDriftMode, &alt::IVehicle::SetDriftMode>("driftMode");
-    // todo: add train stuff
+
+    tpl.Property<&alt::IVehicle::IsTrainMissionTrain, &alt::IVehicle::SetTrainMissionTrain>("isMissionTrain");
+    tpl.Property<&alt::IVehicle::GetTrainTrackId, &alt::IVehicle::SetTrainTrackId>("trainTrackId");
+    tpl.Property<&alt::IVehicle::GetTrainEngineId, &alt::IVehicle::SetTrainEngineId>("trainEngine");
+    tpl.Property<&alt::IVehicle::GetTrainConfigIndex, &alt::IVehicle::SetTrainConfigIndex>("trainConfigIndex");
+    tpl.Property<&alt::IVehicle::GetTrainDistanceFromEngine, &alt::IVehicle::SetTrainDistanceFromEngine>("trainDistanceFromEngine");
+    tpl.Property<&alt::IVehicle::IsTrainEngine, &alt::IVehicle::SetTrainIsEngine>("hasTrainEngine");
+    tpl.Property<&alt::IVehicle::IsTrainCaboose, &alt::IVehicle::SetTrainIsCaboose>("isTrainCaboose");
+    tpl.Property<&alt::IVehicle::GetTrainDirection, &alt::IVehicle::SetTrainDirection>("trainDirection");
+    tpl.Property<&alt::IVehicle::HasTrainPassengerCarriages, &alt::IVehicle::SetTrainHasPassengerCarriages>("hasTrainPassengerCarriages");
+    tpl.Property<&alt::IVehicle::GetTrainRenderDerailed, &alt::IVehicle::SetTrainRenderDerailed>("trainRenderDerailed");
+    tpl.Property<&alt::IVehicle::GetTrainForceDoorsOpen, &alt::IVehicle::SetTrainForceDoorsOpen>("trainForceDoorsOpen");
+    tpl.Property<&alt::IVehicle::GetTrainCruiseSpeed, &alt::IVehicle::SetTrainCruiseSpeed>("trainCruiseSpeed");
+    tpl.Property<&alt::IVehicle::GetTrainCarriageConfigIndex, &alt::IVehicle::SetTrainCarriageConfigIndex>("trainCarriageConfigIndex");
+    tpl.Property<&alt::IVehicle::GetTrainLinkedToBackwardId, &alt::IVehicle::SetTrainLinkedToBackwardId>("trainLinkedToBackward");
+    tpl.Property<&alt::IVehicle::GetTrainLinkedToForwardId, &alt::IVehicle::SetTrainLinkedToForwardId>("trainLinkedToForward");
+    tpl.Property<&alt::IVehicle::GetTrainUnk1, &alt::IVehicle::SetTrainUnk1>("trainUnk1");
+    tpl.Property<&alt::IVehicle::GetTrainUnk2, &alt::IVehicle::SetTrainUnk2>("trainUnk2");
+    tpl.Property<&alt::IVehicle::GetTrainUnk3, &alt::IVehicle::SetTrainUnk3>("trainUnk3");
+
     tpl.Property<&alt::IVehicle::IsBoatAnchorActive, &alt::IVehicle::SetBoatAnchorActive>("boatAnchorActive");
     tpl.Property<&alt::IVehicle::GetLightState, &alt::IVehicle::SetLightState>("lightState");
     tpl.Property<&alt::IVehicle::HasTimedExplosion>("hasTimedExplosion");
@@ -119,6 +193,7 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.Property<&alt::IVehicle::IsHornActive>("isHornActive");
     tpl.Property<&alt::IVehicle::GetAccelerationLevel>("accelerationLevel");
     tpl.Property<&alt::IVehicle::GetBrakeLevel>("brakeLevel");
+    tpl.Property<&alt::IVehicle::GetRearWheelVariation, &alt::IVehicle::SetRearWheels>("rearWheelVariation");
 
     tpl.Method<&alt::IVehicle::SetFixed>("repair");
     tpl.Method("setMod", &SetMod);
@@ -130,6 +205,7 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.Method<&alt::IVehicle::SetWheelOnFire>("setWheelOnFire");
     tpl.Method<&alt::IVehicle::SetWheelHealth>("setWheelHealth");
     tpl.Method<&alt::IVehicle::SetWheelFixed>("setWheelFixed");
+    tpl.Method<&alt::IVehicle::SetWheelHasTire>("setWheelHasTire");
     tpl.Method<&alt::IVehicle::SetPartDamageLevel>("setPartDamageLevel");
     tpl.Method<&alt::IVehicle::SetPartBulletHoles>("setPartBulletHoles");
     tpl.Method<&alt::IVehicle::SetLightDamaged>("setLightDamaged");
@@ -142,6 +218,7 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.Method<&alt::IVehicle::SetTimedExplosion>("setTimedExplosion");
     tpl.Method<&alt::IVehicle::GetWeaponCapacity>("getWeaponCapacity");
     tpl.Method<&alt::IVehicle::SetWeaponCapacity>("setWeaponCapacity");
+    tpl.Method("setBadge", SetBadge);
 
     tpl.GetByID<alt::IBaseObject::Type::VEHICLE>();
 });

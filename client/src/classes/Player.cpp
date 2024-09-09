@@ -37,6 +37,7 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
 
     tpl.Property<&alt::IPlayer::IsTalking>("isTalking");
     tpl.Property<&alt::IPlayer::GetMicLevel>("micLevel");
+    tpl.Property<&alt::IPlayer::GetTaskData>("taskData");
     tpl.Property<&alt::IPlayer::GetSpatialVolume, &alt::IPlayer::SetSpatialVolume>("spatialVolume");
     tpl.Property<&alt::IPlayer::GetNonSpatialVolume, &alt::IPlayer::SetNonSpatialVolume>("nonSpatialVolume");
     tpl.Property("filter", FilterGetter, FilterSetter);
@@ -44,4 +45,5 @@ extern js::Class playerClass("Player", &sharedPlayerClass, nullptr, [](js::Class
     tpl.StaticLazyProperty("local", LocalGetter);
 
     tpl.GetByID<alt::IBaseObject::Type::PLAYER>();
+    tpl.GetByRemoteID<alt::IBaseObject::Type::PLAYER>();
 });

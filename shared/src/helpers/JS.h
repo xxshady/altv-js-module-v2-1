@@ -3,6 +3,8 @@
 #include <thread>
 
 #include "v8-persistent-handle.h"
+#include "v8-profiler.h"
+#include "magic_enum/include/magic_enum.hpp"
 
 #include "Convert.h"
 #include "Type.h"
@@ -14,6 +16,28 @@ namespace js
     using Persistent = v8::Persistent<T, v8::CopyablePersistentTraits<T>>;
 
     class IResource;
+
+    namespace internal
+    {
+        template<typename T>
+        static void WeakHandleCallback(const v8::WeakCallbackInfo<T>& info)
+        {
+            T* val = info.GetParameter();
+            if(!val) return;
+            delete val;
+        }
+
+        void RunEventLoop();
+    }  // namespace internal
+
+    enum class Symbol : uint8_t
+    {
+        SERIALIZE
+    };
+    static v8::Local<v8::Symbol> GetSymbol(Symbol symbol)
+    {
+        return v8::Symbol::ForApi(v8::Isolate::GetCurrent(), JSValue(magic_enum::enum_name(symbol).data()));
+    }
 
     static void Throw(const std::string& message)
     {
@@ -56,8 +80,6 @@ namespace js
         static StackTrace GetCurrent(v8::Isolate* isolate, IResource* resource = nullptr, int framesToSkip = 0);
         static void Print(v8::Isolate* isolate);
     };
-
-    void RunEventLoop();
 
     class TryCatch
     {
@@ -160,6 +182,7 @@ namespace js
 
     public:
         Object() : Value(true), object(v8::Object::New(v8::Isolate::GetCurrent())) {}
+        Object(std::nullptr_t) : Value(false) {}  // Explicit empty object
         Object(v8::Local<v8::Object> _object) : Value(!_object.IsEmpty()), object(_object) {}
         Object(const std::initializer_list<std::pair<std::string, v8::Local<v8::Value>>>& list) : Value(true)
         {
@@ -176,20 +199,21 @@ namespace js
         }
 
         template<typename T>
-        void Set(const std::string& key, const T& val)
+        void Set(std::string_view key, const T& val)
         {
             using Type = std::conditional_t<std::is_enum_v<T>, int, T>;
             static_assert(IsJSValueConvertible<Type>, "Type is not convertible to JS value");
             object->Set(context, js::JSValue(key), js::JSValue((Type)val));
         }
 
-        void SetMethod(const std::string& key, FunctionCallback func);
+        void SetMethod(std::string_view key, internal::FunctionCallback callback);
+        void SetBoundMethod(std::string_view key, internal::FunctionCallback callback);
 
         // Falls back to default value if the value is not found or the type doesn't match
-        template<typename T>
-        T Get(const std::string& key, const T& defaultValue = T()) const
+        template<typename T, bool InternalizedString = false>
+        T Get(std::string_view key, const T& defaultValue = T()) const
         {
-            v8::MaybeLocal<v8::Value> maybeVal = object->Get(context, js::JSValue(key));
+            v8::MaybeLocal<v8::Value> maybeVal = object->Get(context, InternalizedString ? js::CachedString(key) : js::JSValue(key));
             v8::Local<v8::Value> val;
             if(!maybeVal.ToLocal(&val)) return defaultValue;
             std::optional<T> result = js::CppValue<T>(val);
@@ -197,47 +221,73 @@ namespace js
         }
 
         // Throws an error and returns false if the value is not found or the type doesn't match
-        template<typename T>
-        bool Get(const std::string& key, T& out, bool throwOnError = true)
+        template<bool InternalizedString = false, typename T>
+        bool Get(std::string_view key, T& out, bool throwOnError = true)
         {
             using Type = std::conditional_t<std::is_enum_v<T>, int, T>;
-            v8::MaybeLocal<v8::Value> maybeVal = object->Get(context, js::JSValue(key));
+            v8::MaybeLocal<v8::Value> maybeVal = object->Get(context, InternalizedString ? js::CachedString(key) : js::JSValue(key));
             v8::Local<v8::Value> val;
             if(!maybeVal.ToLocal(&val))
             {
-                if(throwOnError) Throw("Failed to get property '" + key + "', value not found");
+                if(throwOnError) Throw("Failed to get property '" + std::string(key) + "', value not found");
                 return false;
             }
             std::optional<Type> result = js::CppValue<Type>(val);
             if(!result.has_value())
             {
-                if(throwOnError) Throw("Failed to get property '" + key + "', invalid type");
+                if(throwOnError) Throw("Failed to get property '" + std::string(key) + "', invalid type");
                 return false;
             }
             out = (T)result.value();
             return true;
         }
 
-        bool GetAsHash(const std::string& key, uint32_t& outValue)
+        template<bool InternalizedString = false>
+        bool GetAsHash(std::string_view key, uint32_t& outValue)
         {
             Type argType = GetType(key);
             if(argType == Type::STRING)
             {
-                std::string val = Get<std::string>(key);
+                std::string val = Get<std::string, InternalizedString>(key);
                 outValue = alt::ICore::Instance().Hash(val);
                 return true;
             }
             else if(argType == Type::NUMBER)
             {
-                uint32_t val = Get<uint32_t>(key);
+                uint32_t val = Get<uint32_t, InternalizedString>(key);
                 outValue = val;
                 return true;
             }
-            Throw("Invalid property type at key " + key + ", expected string or number but got " + TypeToString(argType));
+            Throw("Invalid property type at key " + std::string(key) + ", expected string or number but got " + TypeToString(argType));
             return false;
         }
 
-        bool Has(const std::string& key) const
+        template<bool InternalizedString = false>
+        uint32_t GetAsHashOptional(std::string_view key, uint32_t defaultValue)
+        {
+            Type argType = GetType(key);
+            if(argType == Type::STRING)
+            {
+                std::string val = Get<std::string, InternalizedString>(key);
+                return alt::ICore::Instance().Hash(val);
+            }
+
+            if(argType == Type::NUMBER) return Get<uint32_t, InternalizedString>(key);
+
+            return defaultValue;
+        }
+
+        template<typename T>
+        T GetSymbol(Symbol symbol, const T& defaultValue = T())
+        {
+            v8::MaybeLocal<v8::Value> maybeVal = object->Get(context, js::GetSymbol(symbol));
+            v8::Local<v8::Value> val;
+            if(!maybeVal.ToLocal(&val)) return defaultValue;
+            std::optional<T> result = js::CppValue<T>(val);
+            return result.has_value() ? (T)result.value() : defaultValue;
+        }
+
+        bool Has(std::string_view key) const
         {
             return object->HasOwnProperty(context, js::JSValue(key)).FromMaybe(false);
         }
@@ -248,7 +298,7 @@ namespace js
             v8::MaybeLocal<v8::Array> maybePropNames = object->GetPropertyNames(GetContext(),
                                                                                 v8::KeyCollectionMode::kOwnOnly,
                                                                                 (v8::PropertyFilter)(v8::PropertyFilter::ONLY_ENUMERABLE | v8::PropertyFilter::SKIP_SYMBOLS),
-                                                                                v8::IndexFilter::kSkipIndices,
+                                                                                v8::IndexFilter::kIncludeIndices,
                                                                                 v8::KeyConversionMode::kConvertToString);
             v8::Local<v8::Array> propNames;
             if(!maybePropNames.ToLocal(&propNames)) return keys;
@@ -262,7 +312,7 @@ namespace js
             return keys;
         }
 
-        js::Type GetType(const std::string& key);
+        js::Type GetType(std::string_view key);
 
         template<typename T>
         std::unordered_map<std::string, T> ToMap()
@@ -276,7 +326,7 @@ namespace js
             return map;
         }
 
-        void SetAccessor(const std::string& key, v8::AccessorNameGetterCallback getter, v8::AccessorNameSetterCallback setter = nullptr, void* data = nullptr)
+        void SetAccessor(std::string_view key, v8::AccessorNameGetterCallback getter, v8::AccessorNameSetterCallback setter = nullptr, void* data = nullptr)
         {
             object->SetAccessor(context,
                                 js::JSValue(key),
@@ -288,7 +338,7 @@ namespace js
         }
 
         template<typename T>
-        void SetProperty(const std::string& key, const T& val, bool configurable = true, bool writable = true, bool enumerable = true)
+        void SetProperty(std::string_view key, const T& val, bool configurable = true, bool writable = true, bool enumerable = true)
         {
             static_assert(IsJSValueConvertible<T>, "Type is not convertible to JS value");
             if(configurable && writable && enumerable) object->CreateDataProperty(context, js::JSValue(key), js::JSValue(val));
@@ -492,19 +542,29 @@ namespace js
 
     class Promise : public PersistentValue
     {
+        friend class IResource;
+
     public:
         using V8Type = v8::Promise::Resolver;
 
     private:
         Persistent<v8::Promise::Resolver> resolver;
-        Persistent<v8::Promise> promise;
+        mutable Persistent<v8::Promise> promise;
         Type resultType = Type::INVALID;
+        IResource* resource;
+        bool owned;
+
+        Promise(IResource* _resource)
+            : PersistentValue(true), resolver(v8::Isolate::GetCurrent(), v8::Promise::Resolver::New(GetContext()).ToLocalChecked()), resource(_resource), owned(true)
+        {
+        }
 
     public:
-        Promise() : PersistentValue(true), resolver(v8::Isolate::GetCurrent(), v8::Promise::Resolver::New(GetContext()).ToLocalChecked()) {}
-        Promise(v8::Local<v8::Promise> _promise) : PersistentValue(!_promise.IsEmpty()), promise(v8::Isolate::GetCurrent(), _promise) {}
+        Promise() : PersistentValue(true), resolver(v8::Isolate::GetCurrent(), v8::Promise::Resolver::New(GetContext()).ToLocalChecked()), owned(false) {}
+        Promise(v8::Local<v8::Promise> _promise) : PersistentValue(!_promise.IsEmpty()), promise(v8::Isolate::GetCurrent(), _promise), owned(false) {}
+        ~Promise();
 
-        v8::Local<v8::Promise> Get()
+        v8::Local<v8::Promise> Get() const
         {
             if(!HasPromise() && HasResolver()) promise.Reset(v8::Isolate::GetCurrent(), GetResolver()->GetPromise());
             return promise.Get(v8::Isolate::GetCurrent());
@@ -527,6 +587,11 @@ namespace js
         v8::Promise::PromiseState State()
         {
             return Get()->State();
+        }
+
+        IResource* GetResource()
+        {
+            return resource;
         }
 
         template<typename T>
@@ -574,12 +639,18 @@ namespace js
             while(true)
             {
                 v8::Promise::PromiseState state = promise->State();
+
                 switch(state)
                 {
-                    case v8::Promise::PromiseState::kPending: RunEventLoop(); break;
+                    case v8::Promise::PromiseState::kPending: internal::RunEventLoop(); break;
                     case v8::Promise::PromiseState::kFulfilled: return true;
                     case v8::Promise::PromiseState::kRejected: return false;
+
+                    // NOTE (xLuxy): I have no idea why state can be 3 or what it means - it's undocumented
+                    //               state is probably state - 1?
+                    case 3: return false;
                 }
+
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
@@ -599,11 +670,6 @@ namespace js
             if(!HasResolver()) return;
             GetResolver()->Reject(GetContext(), JSValue(value));
         }
-
-        static std::shared_ptr<Promise> Create()
-        {
-            return std::make_shared<Promise>();
-        }
     };
 
     struct TemporaryGlobalExtension
@@ -615,7 +681,7 @@ namespace js
         {
             ctx->Global()->Set(ctx, js::JSValue(_name), value);
         }
-        TemporaryGlobalExtension(v8::Local<v8::Context> _ctx, const std::string& _name, FunctionCallback _callback);
+        TemporaryGlobalExtension(v8::Local<v8::Context> _ctx, const std::string& _name, internal::FunctionCallback _callback);
         ~TemporaryGlobalExtension()
         {
             ctx->Global()->Delete(ctx, js::JSValue(name));
@@ -647,6 +713,33 @@ namespace js
         {
             // We should only do this for "eternal" strings that never get deleted,
             // so don't do anything here
+        }
+    };
+
+    class StringOutputStream : public v8::OutputStream
+    {
+    public:
+        using Callback = std::function<void(const std::string&)>;
+
+    private:
+        std::stringstream stream;
+        Callback callback;
+        js::IResource* resource;
+
+        StringOutputStream(js::IResource* _resource, const Callback& _callback) : resource(_resource), callback(_callback) {}
+
+    public:
+        virtual void EndOfStream() override;
+        virtual WriteResult WriteAsciiChunk(char* data, int size) override
+        {
+            stream << data;
+            return WriteResult::kContinue;
+        }
+
+        // Don't expose the constructor so it can't be stack allocated
+        static StringOutputStream* Create(js::IResource* resource, const Callback& callback)
+        {
+            return new StringOutputStream(resource, callback);
         }
     };
 }  // namespace js

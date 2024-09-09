@@ -4,8 +4,14 @@
 
 namespace js
 {
-    void DebugHandlesCommand(const std::vector<std::string>&);
-    void DumpBindingCommand(const std::vector<std::string>&);
-    void DumpAllBindingsCommand(const std::vector<std::string>&);
-    void ShowBuffersCommand(const std::vector<std::string>&);
+    using CommandArgs = const std::vector<std::string>;
+
+    void DebugHandlesCommand(CommandArgs&);
+    void DumpBindingCommand(CommandArgs&);
+    void DumpAllBindingsCommand(CommandArgs&);
+    void DumpSampleCommand(CommandArgs&);
+    void DumpAllSamplesCommand(CommandArgs&);
+    void ResetSamplesCommand(CommandArgs&);
+    void DumpBuffersCommand(CommandArgs&);
+    void DumpHeapCommand(CommandArgs&);
 }  // namespace js

@@ -12,7 +12,7 @@ namespace js
 
     class IScriptObjectHandler
     {
-        std::unordered_multimap<alt::IBaseObject::Type, ScriptObject*> objectMap;
+        std::unordered_map<alt::IBaseObject*, ScriptObject*> objectMap;
         std::unordered_map<alt::IBaseObject::Type, Persistent<v8::Function>> customFactoryMap;
 
         static std::unordered_map<alt::IBaseObject::Type, Class*>& GetClassMap()
@@ -30,10 +30,7 @@ namespace js
     protected:
         void Reset()
         {
-            for(auto& [type, scriptObject] : objectMap)
-            {
-                ScriptObject::Destroy(scriptObject);
-            }
+            for(auto& [_, scriptObject] : objectMap) ScriptObject::Destroy(scriptObject);
             objectMap.clear();
             customFactoryMap.clear();
         }
@@ -44,18 +41,7 @@ namespace js
         ScriptObject* GetOrCreateScriptObject(v8::Local<v8::Context> context, alt::IBaseObject* object);
         void DestroyScriptObject(alt::IBaseObject* object);
 
-        ScriptObject* GetScriptObject(alt::IBaseObject* object)
-        {
-            auto range = objectMap.equal_range(object->GetType());
-            for(auto it = range.first; it != range.second; ++it)
-            {
-                if(it->second->GetObject() == object)
-                {
-                    return it->second;
-                }
-            }
-            return nullptr;
-        }
+        ScriptObject* GetScriptObject(alt::IBaseObject* object);
         ScriptObject* GetScriptObject(v8::Local<v8::Value> value)
         {
             if(!value->IsObject()) return nullptr;
@@ -65,7 +51,7 @@ namespace js
 
         void SetCustomFactory(alt::IBaseObject::Type type, v8::Local<v8::Function> factory)
         {
-            customFactoryMap.insert({ type, Persistent<v8::Function>(factory->GetIsolate(), factory) });
+            customFactoryMap[type] = Persistent<v8::Function>(factory->GetIsolate(), factory);
         }
         v8::Local<v8::Function> GetCustomFactory(alt::IBaseObject::Type type)
         {
@@ -74,6 +60,16 @@ namespace js
         bool HasCustomFactory(alt::IBaseObject::Type type)
         {
             return customFactoryMap.contains(type);
+        }
+
+        void Initialize(v8::Local<v8::Context> context)
+        {
+            auto entites = alt::ICore::Instance().GetEntities();
+
+            for (auto entity : entites)
+            {
+                GetOrCreateScriptObject(context, entity);
+            }
         }
 
         static void BindClassToType(alt::IBaseObject::Type type, Class* class_);

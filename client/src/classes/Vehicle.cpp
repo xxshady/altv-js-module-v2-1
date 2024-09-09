@@ -1,15 +1,26 @@
 #include "Class.h"
 
 extern js::Class handlingClass;
-static void HandlingGetter(js::PropertyContext& ctx)
+static void HandlingGetter(js::LazyPropertyContext& ctx)
 {
-    if(!ctx.CheckExtraInternalFieldJSValue()) return;
-    uint32_t modelHash = ctx.GetExtraInternalFieldJSValue<uint32_t>();
+    if(!ctx.CheckThis()) return;
+    alt::IVehicle* vehicle = ctx.GetThisObject<alt::IVehicle>();
 
-    auto data = alt::ICore::Instance().GetHandlingData(modelHash);
-    if(!ctx.Check(data != nullptr, "No HandlingData exists with this hash")) return;
+    ctx.Return(handlingClass.Create(ctx.GetContext(), vehicle));
+}
 
-    ctx.Return(handlingClass.Create(ctx.GetContext(), js::JSValue(modelHash)));
+static void GetByScriptID(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckArgCount(1)) return;
+
+    uint32_t scriptId;
+    if(!ctx.GetArg(0, scriptId)) return;
+
+    auto obj = alt::ICore::Instance().GetWorldObjectByScriptID(scriptId);
+    if (obj && (obj->GetType() == alt::IBaseObject::Type::VEHICLE || obj->GetType() == alt::IBaseObject::Type::LOCAL_VEHICLE))
+        return ctx.Return(obj);
+
+    ctx.Return(nullptr);
 }
 
 // clang-format off
@@ -18,13 +29,14 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
 {
     tpl.BindToType(alt::IBaseObject::Type::VEHICLE);
 
+    tpl.LazyProperty("handling", HandlingGetter);
+
     tpl.Property<&alt::IVehicle::GetWheelSpeed>("speed");
     tpl.Property<&alt::IVehicle::GetCurrentGear, &alt::IVehicle::SetCurrentGear>("gear");
     tpl.Property<&alt::IVehicle::GetMaxGear>("maxGear");
     tpl.Property<&alt::IVehicle::GetCurrentRPM, &alt::IVehicle::SetCurrentRPM>("rpm");
     tpl.Property<&alt::IVehicle::GetWheelsCount>("wheelsCount");
     tpl.Property<&alt::IVehicle::GetSpeedVector>("speedVector");
-    tpl.Property("handling", HandlingGetter);
     tpl.Property<&alt::IVehicle::IsHandlingModified>("isHandlingModified");
     tpl.Property<&alt::IVehicle::GetLightsIndicator, &alt::IVehicle::SetLightsIndicator>("indicatorLights");
     tpl.Property<&alt::IVehicle::GetSeatCount>("seatCount");
@@ -39,6 +51,8 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.Property<&alt::IVehicle::GetOilLightState, &alt::IVehicle::SetOilLightState>("oilLightState");
     tpl.Property<&alt::IVehicle::GetBatteryLightState, &alt::IVehicle::SetBatteryLightState>("batteryLightState");
     tpl.Property<&alt::IVehicle::GetSuspensionHeight, &alt::IVehicle::SetSuspensionHeight>("suspensionHeight");
+
+    tpl.Property<&alt::IVehicle::GetSteeringAngle, &alt::IVehicle::SetSteeringAngle>("steeringAngle");
 
     tpl.Method<&alt::IVehicle::ResetHandling>("resetHandling");
     tpl.Method<&alt::IVehicle::ReplaceHandling>("replaceHandling");
@@ -55,8 +69,16 @@ extern js::Class vehicleClass("Vehicle", &sharedVehicleClass, nullptr, [](js::Cl
     tpl.Method<&alt::IVehicle::SetWheelRimRadius>("setWheelRimRadius");
     tpl.Method<&alt::IVehicle::GetWheelTyreWidth>("getWheelTyreWidth");
     tpl.Method<&alt::IVehicle::SetWheelTyreWidth>("setWheelTyreWidth");
+    tpl.Method<&alt::IVehicle::GetWheelDynamicFlag>("getWheelDynamicFlag");
+    tpl.Method<&alt::IVehicle::SetWheelDynamicFlag>("setWheelDynamicFlag");
+    tpl.Method<&alt::IVehicle::GetWheelConfigFlag>("getWheelConfigFlag");
+    tpl.Method<&alt::IVehicle::SetWheelConfigFlag>("setWheelConfigFlag");
     tpl.Method<&alt::IVehicle::GetWheelSurfaceMaterial>("getWheelSurfaceMaterial");
     tpl.Method<&alt::IVehicle::ResetDashboardLights>("resetDashboardLights");
 
+    tpl.Method<&alt::IVehicle::SetupTransmission>("setupTransmission");
+
     tpl.GetByID<alt::IBaseObject::Type::VEHICLE>();
+    tpl.GetByRemoteID<alt::IBaseObject::Type::VEHICLE>();
+    tpl.StaticFunction("getByScriptID", &GetByScriptID);
 });

@@ -1,5 +1,10 @@
 #include "Namespace.h"
 
+static void LoadedVehicleModelsGetter(js::FunctionContext& ctx)
+{
+    ctx.Return(alt::ICore::Instance().GetLoadedVehicleModels());
+}
+
 static void DoesExtraExist(js::FunctionContext& ctx)
 {
     if(!ctx.CheckArgCount(1)) return;
@@ -42,6 +47,7 @@ static void Get(js::FunctionContext& ctx)
 
     js::Object modelObj;
     modelObj.Set("model", model);
+    modelObj.Set("modelHash", info.modelHash);
     modelObj.Set("title", info.title);
     modelObj.Set("modelType", info.modelType);
     modelObj.Set("wheelsCount", info.wheelsCount);
@@ -72,13 +78,17 @@ static void Get(js::FunctionContext& ctx)
     }
     modelObj.Set("bones", bones);
     modelObj.Set("canAttachCars", info.canAttachCars);
-    modelObj.SetMethod("doesExtraExist", DoesExtraExist);
-    modelObj.SetMethod("isExtraDefault", IsExtraDefault);
+    modelObj.Set("handlingNameHash", info.handlingNameHash);
+
+    modelObj.SetBoundMethod("doesExtraExist", DoesExtraExist);
+    modelObj.SetBoundMethod("isExtraDefault", IsExtraDefault);
 
     ctx.Return(modelObj);
 }
 
 // clang-format off
 extern js::Namespace vehicleModelInfoNamespace("VehicleModelInfo", [](js::NamespaceTemplate& tpl) {
+    tpl.StaticProperty("loadedVehicleModels", LoadedVehicleModelsGetter);
+
     tpl.StaticFunction("get", Get);
 });

@@ -37,17 +37,68 @@ void CJavaScriptRuntime::OnPromiseRejected(v8::PromiseRejectMessage message)
 v8::MaybeLocal<v8::Promise> CJavaScriptRuntime::ImportModuleDynamically(
   v8::Local<v8::Context> context, v8::Local<v8::Data> hostDefinedOptions, v8::Local<v8::Value> resourceName, v8::Local<v8::String> specifier, v8::Local<v8::FixedArray> importAssertions)
 {
-    // todo
-    return v8::MaybeLocal<v8::Promise>();
+    CJavaScriptResource* resource = js::IResource::GetFromContext<CJavaScriptResource>(context);
+    js::Promise promise;
+    std::string referrer = js::CppValue(resourceName.As<v8::String>());
+    v8::Local<v8::Module> referrerModule = resource->GetModuleFromPath(referrer);
+    if(referrerModule.IsEmpty())
+    {
+        promise.Reject("Could not find referrer module");
+        return promise.Get();
+    }
+
+    std::unordered_map<std::string, std::string> assertions = IModuleHandler::TransformImportAssertions(importAssertions);
+    v8::MaybeLocal<v8::Module> maybeModule = resource->Resolve(context, js::CppValue(specifier), referrerModule, assertions);
+    if(maybeModule.IsEmpty())
+    {
+        promise.Reject("Could not resolve module");
+        return promise.Get();
+    }
+
+    v8::Local<v8::Module> module = maybeModule.ToLocalChecked();
+    if(module->GetStatus() == v8::Module::Status::kUninstantiated && !resource->InstantiateModule(context, module))
+    {
+        promise.Reject("Failed to instantiate module");
+        return promise.Get();
+    }
+
+    if(module->GetStatus() != v8::Module::Status::kEvaluated)
+    {
+        resource->EvaluateModule(context, module);
+        if(module->GetStatus() == v8::Module::Status::kErrored)
+        {
+            promise.Reject("Failed to evaluate module");
+            return promise.Get();
+        }
+    }
+
+    promise.Resolve(module->GetModuleNamespace());
+    return promise.Get();
 }
 
-void CJavaScriptRuntime::InitializeImportMetaObject(v8::Local<v8::Context> context, v8::Local<v8::Module>, v8::Local<v8::Object> meta)
+static void Resolve(js::FunctionContext& ctx)
+{
+    if(!ctx.CheckArgCount(1)) return;
+
+    std::string path;
+    if(!ctx.GetArg(0, path)) return;
+
+    js::IAltResource* resource = ctx.GetResource<js::IAltResource>();
+    std::string currentFile = js::SourceLocation::GetCurrent(resource).file;
+    alt::IPackage::PathInfo pathInfo = alt::ICore::Instance().Resolve(resource->GetResource(), path, currentFile);
+    if(!ctx.Check(pathInfo.pkg, "Invalid path")) return;
+
+    ctx.Return(pathInfo.prefix + pathInfo.fileName);
+}
+
+void CJavaScriptRuntime::InitializeImportMetaObject(v8::Local<v8::Context> context, v8::Local<v8::Module> mod, v8::Local<v8::Object> meta)
 {
     CJavaScriptResource* resource = js::IResource::GetFromContext<CJavaScriptResource>(context);
     if(!resource) return;
 
     js::Object metaObj(meta);
-    metaObj.Set("url", js::SourceLocation::GetCurrent(resource).file);
+    metaObj.Set("url", resource->GetModulePath(mod));
+    metaObj.SetMethod("resolve", Resolve);
 }
 
 void CJavaScriptRuntime::MessageListener(v8::Local<v8::Message> message, v8::Local<v8::Value> error)
@@ -69,10 +120,13 @@ void CJavaScriptRuntime::SetupIsolateHandlers()
 bool CJavaScriptRuntime::Initialize()
 {
     v8::V8::SetFlagsFromString("--harmony-import-assertions --short-builtin-calls --no-lazy --no-flush-bytecode");
+
+#ifdef ALTV_JSV2_SHARED
     platform = v8::platform::NewDefaultPlatform();
     v8::V8::InitializePlatform(platform.get());
     v8::V8::InitializeICU((alt::ICore::Instance().GetClientPath() + "/libs/icudtl_v8.dat").c_str());
     v8::V8::Initialize();
+#endif  // ALTV_JSV2_SHARED
 
     v8::Isolate::CreateParams createParams;
     createParams.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
@@ -95,13 +149,13 @@ void CJavaScriptRuntime::OnTick()
     v8::Isolate::Scope isolateScope(isolate);
     v8::HandleScope handleScope(isolate);
 
-    v8::platform::PumpMessageLoop(platform.get(), isolate);
+    v8::platform::PumpMessageLoop(GetPlatform(), isolate);
 }
 
 void CJavaScriptRuntime::OnDispose()
 {
     while(isolate->IsInUse()) isolate->Exit();
-    v8::platform::NotifyIsolateShutdown(platform.get(), isolate);
+    v8::platform::NotifyIsolateShutdown(GetPlatform(), isolate);
     isolate->Dispose();
     v8::V8::Dispose();
     v8::V8::DisposePlatform();

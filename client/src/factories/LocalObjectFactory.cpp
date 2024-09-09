@@ -17,9 +17,7 @@ static js::FactoryHandler localObjectFactory(alt::IBaseObject::Type::LOCAL_OBJEC
         uint32_t weaponHash;
         if(!args.GetAsHash("weapon", weaponHash)) return nullptr;
 
-        uint32_t modelHash;
-        if(!args.GetAsHash("model", modelHash)) return nullptr;
-
+        uint32_t modelHash = args.GetAsHashOptional("model", 0);
         float ammoCount = args.Get<float>("ammoCount", 100);
         bool createDefaultComponents = args.Get<bool>("createDefaultComponents", true);
         float scale = args.Get<float>("scale", 1);
@@ -40,11 +38,8 @@ static js::FactoryHandler localObjectFactory(alt::IBaseObject::Type::LOCAL_OBJEC
         if(!args.Get("rot", rot)) return nullptr;
 
         bool noOffset = args.Get<bool>("noOffset", false);
-
         bool dynamic = args.Get<bool>("dynamic", false);
-
         bool useStreaming = args.Get<bool>("useStreaming", false);
-
         uint32_t streamingDistance = args.Get<uint32_t>("streamingDistance", 0);
 
         return alt::ICore::Instance().CreateLocalObject(modelHash, pos, rot, noOffset, dynamic, useStreaming, streamingDistance, args.GetResource()->GetResource());

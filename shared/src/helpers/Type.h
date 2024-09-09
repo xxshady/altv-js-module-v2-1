@@ -92,15 +92,15 @@ namespace js
     {
         switch(type)
         {
-            case Type::UNDEFINED: return "Undefined";
-            case Type::NULL_TYPE: return "Null";
-            case Type::BOOLEAN: return "Boolean";
-            case Type::NUMBER: return "Number";
-            case Type::STRING: return "String";
-            case Type::SYMBOL: return "Symbol";
-            case Type::OBJECT: return "Object";
-            case Type::FUNCTION: return "Function";
-            case Type::ARRAY: return "Array";
+            case Type::UNDEFINED: return "undefined";
+            case Type::NULL_TYPE: return "null";
+            case Type::BOOLEAN: return "boolean";
+            case Type::NUMBER: return "number";
+            case Type::STRING: return "string";
+            case Type::SYMBOL: return "symbol";
+            case Type::OBJECT: return "object";
+            case Type::FUNCTION: return "function";
+            case Type::ARRAY: return "array";
             case Type::ARRAY_BUFFER: return "ArrayBuffer";
             case Type::ARRAY_BUFFER_VIEW: return "ArrayBufferView";
             case Type::SHARED_ARRAY_BUFFER: return "SharedArrayBuffer";
@@ -139,7 +139,7 @@ namespace js
         if constexpr(std::is_same_v<T, nullptr_t>) return Type::NULL_TYPE;
         if constexpr(std::is_same_v<T, bool>) return Type::BOOLEAN;
         if constexpr((std::is_integral_v<T> || std::is_floating_point_v<T>) && sizeof(T) < 8) return Type::NUMBER;
-        if constexpr((std::is_integral_v<T> || std::is_floating_point_v<T>) && sizeof(T) > 8) return Type::BIG_INT;
+        if constexpr((std::is_integral_v<T> || std::is_floating_point_v<T>) && sizeof(T) >= 8) return Type::BIG_INT;
         if constexpr(std::is_same_v<T, std::string>) return Type::STRING;
         if constexpr(std::is_same_v<T, alt::Vector3f> || std::is_same_v<T, alt::Position> || std::is_same_v<T, alt::Rotation>) return Type::VECTOR3;
         if constexpr(std::is_same_v<T, alt::Vector2f>) return Type::VECTOR2;

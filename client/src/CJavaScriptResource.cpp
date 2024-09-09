@@ -6,7 +6,14 @@ v8::Local<v8::Module> CJavaScriptResource::CompileAndRun(const std::string& path
 {
     js::TryCatch tryCatch(isolate);
 
-    v8::MaybeLocal<v8::Module> maybeMod = CompileModule(path, source);
+    const std::vector<uint8_t> buffer(source.begin(), source.end());
+
+    bool isBytecode = IModuleHandler::IsBytecodeBuffer(buffer);
+
+    v8::MaybeLocal<v8::Module> maybeMod = isBytecode
+        ? CompileBytecode(path, buffer)
+        : CompileModule(path, source);
+
     if(maybeMod.IsEmpty())
     {
         js::Logger::Error("[JS] Failed to compile file", path);
@@ -20,7 +27,13 @@ v8::Local<v8::Module> CJavaScriptResource::CompileAndRun(const std::string& path
     if(!InstantiateModule(GetContext(), mod) || tryCatch.HasCaught())
     {
         js::Logger::Error("[JS] Failed to instantiate file", path);
-        if(mod->GetStatus() == v8::Module::kErrored) js::Logger::Error("[JS]", *v8::String::Utf8Value(isolate, mod->GetException()));
+        if(mod->GetStatus() == v8::Module::kErrored)
+        {
+            js::Object exceptionObj = mod->GetException().As<v8::Object>();
+            js::Logger::Error("[JS]", exceptionObj.Get<std::string>("message"));
+            std::string stack = exceptionObj.Get<std::string>("stack");
+            if(!stack.empty()) js::Logger::Error(stack);
+        }
         tryCatch.Check(true, true);
         return v8::Local<v8::Module>();
     }
@@ -28,7 +41,13 @@ v8::Local<v8::Module> CJavaScriptResource::CompileAndRun(const std::string& path
     if(maybeResult.IsEmpty() || maybeResult.ToLocalChecked().As<v8::Promise>()->State() == v8::Promise::PromiseState::kRejected)
     {
         js::Logger::Error("[JS] Failed to start file", path);
-        if(mod->GetStatus() == v8::Module::kErrored) js::Logger::Error("[JS]", *v8::String::Utf8Value(isolate, mod->GetException()));
+        if(mod->GetStatus() == v8::Module::kErrored)
+        {
+            js::Object exceptionObj = mod->GetException().As<v8::Object>();
+            js::Logger::Error("[JS]", exceptionObj.Get<std::string>("message"));
+            std::string stack = exceptionObj.Get<std::string>("stack");
+            if(!stack.empty()) js::Logger::Error(stack);
+        }
         tryCatch.Check(true, true);
         return v8::Local<v8::Module>();
     }
@@ -36,6 +55,18 @@ v8::Local<v8::Module> CJavaScriptResource::CompileAndRun(const std::string& path
     promise.Await();
 
     return mod;
+}
+
+void CJavaScriptResource::LoadConfig()
+{
+    Config::Value::ValuePtr config = resource->GetConfig();
+    if(!config->IsDict()) return;
+
+    Config::Value::ValuePtr jsConfig = config["js-module-v2"];
+    if(!jsConfig->IsDict()) return;
+
+    bool compatibilityEnabled = jsConfig["compatibilityEnabled"]->AsBool(false);
+    ToggleCompatibilityMode(compatibilityEnabled);
 }
 
 bool CJavaScriptResource::Start()
@@ -53,6 +84,8 @@ bool CJavaScriptResource::Start()
     context.Reset(isolate, _context);
 
     v8::Context::Scope scope(_context);
+
+    LoadConfig();
     IResource::Initialize();
     IResource::InitializeBindings(js::Binding::Scope::CLIENT, js::Module::Get("@altv/client"));
 
@@ -70,6 +103,12 @@ bool CJavaScriptResource::Start()
     alt::MValueDict exportsDict = std::dynamic_pointer_cast<alt::IMValueDict>(js::JSToMValue(mod->GetModuleNamespace()));
     GetResource()->SetExports(exportsDict);
 
+    if (IsCompatibilityModeEnabled())
+    {
+        auto resourceName = resource->GetName();
+        js::Logger::Colored << "~y~[JS] Compatibility mode is enabled for resource " << resourceName << js::Logger::Endl;
+    }
+
     return true;
 }
 
@@ -80,13 +119,24 @@ bool CJavaScriptResource::Stop()
     IResource::Scope scope(this);
     auto nativeScope = GetResource()->PushNativesScope();
 
-    microtaskQueue.reset();
-
     IExceptionHandler::Reset();
     IModuleHandler::Reset();
-    IResource::Reset();
+    IAltResource::Reset();
+
+    microtaskQueue.reset();
+    nativeContext.reset();
+
+    started = false;
 
     return true;
+}
+
+void CJavaScriptResource::OnEvent(const alt::CEvent* ev)
+{
+    if(context.IsEmpty()) return;
+
+    auto nativeScope = GetResource()->PushNativesScope();
+    IAltResource::OnEvent(ev);
 }
 
 void CJavaScriptResource::OnTick()
@@ -94,11 +144,12 @@ void CJavaScriptResource::OnTick()
     if(context.IsEmpty()) return;
 
     IResource::Scope scope(this);
-    auto nativeScope = GetResource()->PushNativesScope();
 
     microtaskQueue->PerformCheckpoint(isolate);
 
     IAltResource::OnTick();
+
+    IExceptionHandler::ProcessExceptions();
 }
 
 void CJavaScriptResource::RunEventLoop()

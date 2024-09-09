@@ -1,15 +1,6 @@
 #include "Event.h"
 
 // clang-format off
-static js::Event colshapeEvent(alt::CEvent::Type::COLSHAPE_EVENT, [](const alt::CEvent* ev, js::Event::EventArgs& args)
-{
-    auto e = static_cast<const alt::CColShapeEvent*>(ev);
-
-    args.Set("entity", e->GetEntity());
-    args.Set("colShape", e->GetTarget());
-    args.Set("state", e->GetState());
-});
-
 static js::Event explosionEvent(alt::CEvent::Type::EXPLOSION_EVENT, [](const alt::CEvent* ev, js::Event::EventArgs& args)
 {
     auto e = static_cast<const alt::CExplosionEvent*>(ev);
@@ -47,4 +38,13 @@ static js::Event startProjectileEvent(alt::CEvent::Type::START_PROJECTILE_EVENT,
     args.Set("dir", e->GetDirection());
     args.Set("ammoHash", e->GetAmmoHash());
     args.Set("weaponHash", e->GetWeaponHash());
+});
+
+static js::Event givePedScriptedTaskEvent(alt::CEvent::Type::GIVE_PED_SCRIPTED_TASK, [](const alt::CEvent* ev, js::Event::EventArgs& args)
+{
+    auto e = static_cast<const alt::CGivePedScriptedTaskEvent*>(ev);
+
+    args.Set("source", e->GetSource());
+    args.Set("target", e->GetTarget());
+    args.Set("taskType", e->GetTaskType());
 });
