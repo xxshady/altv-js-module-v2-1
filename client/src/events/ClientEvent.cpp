@@ -1,5 +1,5 @@
 #include "Event.h"
-#include "events/CAudioEvent.h"
+#include "cpp-sdk/events/CAudioEvent.h"
 
 // clang-format off
 static js::Event keyBoardEvent(alt::CEvent::Type::KEYBOARD_EVENT, [](const alt::CEvent* ev, js::Event::EventArgs& args)

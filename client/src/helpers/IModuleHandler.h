@@ -33,8 +33,6 @@ protected:
     static v8::MaybeLocal<v8::Module>
       ResolveModuleCallback(v8::Local<v8::Context> context, v8::Local<v8::String> specifier, v8::Local<v8::FixedArray> importAssertions, v8::Local<v8::Module> referrer);
 
-    static std::unordered_map<std::string, std::string> TransformImportAssertions(v8::Local<v8::FixedArray> assertions);
-
     std::string GetModulePath(v8::Local<v8::Module> module)
     {
         for(auto& [path, _module] : modules)
@@ -77,6 +75,8 @@ protected:
     std::unordered_map<int, PersistentSyntheticModuleExports> syntheticModuleExports;
 
 public:
+    static std::unordered_map<std::string, std::string> TransformImportAssertions(v8::Local<v8::FixedArray> assertions);
+
     v8::MaybeLocal<v8::Module> CompileModule(const std::string& name, const std::string& source);
     v8::Local<v8::Module> CompileSyntheticModule(const std::string& name, const SyntheticModuleExports& exports);
     v8::MaybeLocal<v8::Module> CompileBytecode(const std::string& name, const std::vector<uint8_t>& bytecode);

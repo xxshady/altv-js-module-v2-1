@@ -120,10 +120,13 @@ void CJavaScriptRuntime::SetupIsolateHandlers()
 bool CJavaScriptRuntime::Initialize()
 {
     v8::V8::SetFlagsFromString("--harmony-import-assertions --short-builtin-calls --no-lazy --no-flush-bytecode");
+
+#ifdef ALTV_JSV2_SHARED
     platform = v8::platform::NewDefaultPlatform();
     v8::V8::InitializePlatform(platform.get());
     v8::V8::InitializeICU((alt::ICore::Instance().GetClientPath() + "/libs/icudtl_v8.dat").c_str());
     v8::V8::Initialize();
+#endif  // ALTV_JSV2_SHARED
 
     v8::Isolate::CreateParams createParams;
     createParams.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
@@ -146,13 +149,13 @@ void CJavaScriptRuntime::OnTick()
     v8::Isolate::Scope isolateScope(isolate);
     v8::HandleScope handleScope(isolate);
 
-    v8::platform::PumpMessageLoop(platform.get(), isolate);
+    v8::platform::PumpMessageLoop(GetPlatform(), isolate);
 }
 
 void CJavaScriptRuntime::OnDispose()
 {
     while(isolate->IsInUse()) isolate->Exit();
-    v8::platform::NotifyIsolateShutdown(platform.get(), isolate);
+    v8::platform::NotifyIsolateShutdown(GetPlatform(), isolate);
     isolate->Dispose();
     v8::V8::Dispose();
     v8::V8::DisposePlatform();

@@ -15,6 +15,7 @@ static void CallNative(const v8::FunctionCallbackInfo<v8::Value>& _info)
 
     js::NativeInvoker::Invoke(ctx, native, true);
 }
+
 static js::Module compatibilityNativesModule("natives", [](js::ModuleTemplate& tpl) {
     std::vector<alt::INative*> natives = alt::ICore::Instance().GetAllNatives();
     for(alt::INative* native : natives)
