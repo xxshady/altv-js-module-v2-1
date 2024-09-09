@@ -48,9 +48,12 @@ namespace js
         };
 
     public:
+        static constexpr const char* PREFIX = "[JSv2]";
+
         static constexpr struct EndlStruct
         {
         } Endl{};
+
         static constexpr Instance<Type::INFO> Info{};
         static constexpr Instance<Type::COLORED> Colored{};
         static constexpr Instance<Type::WARN> Warn{};

@@ -19,10 +19,10 @@ js::Logger& js::Logger::operator<<(const js::Logger::EndlStruct&)
     std::string str = stream.str();
     switch(type)
     {
-        case Type::INFO: alt::ICore::Instance().LogInfo(str, altResource); break;
-        case Type::COLORED: alt::ICore::Instance().LogColored(str, altResource); break;
-        case Type::WARN: alt::ICore::Instance().LogWarning(str, altResource); break;
-        case Type::ERR: alt::ICore::Instance().LogError(str, altResource); break;
+        case Type::INFO: alt::ICore::Instance().LogInfo(PREFIX, str, altResource); break;
+        case Type::COLORED: alt::ICore::Instance().LogColored(PREFIX, str, altResource); break;
+        case Type::WARN: alt::ICore::Instance().LogWarning(PREFIX, str, altResource); break;
+        case Type::ERR: alt::ICore::Instance().LogError(PREFIX, str, altResource); break;
     }
     stream.str("");
     return *this;
